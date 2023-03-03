@@ -1,4 +1,3 @@
-
 // nacteni knihovny pro ovladani LCD displeje pres I2C prevodnik
 #include <LiquidCrystal_I2C.h>
 
