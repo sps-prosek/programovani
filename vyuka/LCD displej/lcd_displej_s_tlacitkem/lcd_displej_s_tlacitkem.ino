@@ -52,9 +52,7 @@ void loop() {
   if ((millis() - t0) >= 1000 && i <= 100) {
 
     // volani uzivatelske funkce pro obnovu displeje
-    //obnov_displej();
-
-    
+    obnov_displej();
 
     // aktualizace casu
     t0 = millis();
@@ -68,7 +66,7 @@ void loop() {
 
     // nulovani zobrazovane promenne
     i = 0;
-    
+
     // aktualizace casu
     t0 = millis();
 
