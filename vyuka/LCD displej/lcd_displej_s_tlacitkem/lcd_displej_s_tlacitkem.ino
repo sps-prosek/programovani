@@ -1,3 +1,6 @@
+// knihova pro komunikaci pomoci I2C
+#include <Wire.h>
+
 // nacteni knihovny pro ovladani LCD displeje pres I2C prevodnik
 #include <LiquidCrystal_I2C.h>
 
@@ -49,7 +52,9 @@ void loop() {
   if ((millis() - t0) >= 1000 && i <= 100) {
 
     // volani uzivatelske funkce pro obnovu displeje
-    obnov_displej();
+    //obnov_displej();
+
+    
 
     // aktualizace casu
     t0 = millis();
