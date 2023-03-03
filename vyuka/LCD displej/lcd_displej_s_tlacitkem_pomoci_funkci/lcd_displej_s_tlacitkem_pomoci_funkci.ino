@@ -29,7 +29,7 @@ void loop() {
   }
 }
 
-void tlacitko() {
+int tlacitko() {
   int tlacitko = digitalRead(PIN_TL);
   if (tlacitko == LOW && tlacitko_predchozi == HIGH) {
     return 1;
