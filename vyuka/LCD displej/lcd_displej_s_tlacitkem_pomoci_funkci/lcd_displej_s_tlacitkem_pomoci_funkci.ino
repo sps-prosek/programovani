@@ -11,7 +11,7 @@ int tlacitko_predchozi;
 
 void setup() {
   init_displej();
-  init_tlacitko()
+  init_tlacitko();
   cas_predchozi = millis();
 }
 
