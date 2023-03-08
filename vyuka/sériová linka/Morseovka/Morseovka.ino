@@ -30,12 +30,12 @@ void loop()
 {
   if (Serial.available() > 0) {
     char znak = Serial.read();
-	if (index < 6) {
+	if (index < 6 && blikej == 0) {
 	  if (znak == '.' || znak == '-') {
 		pole[index] = znak;
 		index++;
 	  }
-      if (index == 6 || znak == '/') {
+      if ((index == 6 || znak == '/') ) {
 		index_blikani = 0;
         pocet_tiknuti = 0;
         pocet_tiknuti_predchozi = 0;
