@@ -70,16 +70,15 @@ void loop()
 	if (index_blikani == 6) index = 0;
 	
   }
-  
-  // jakmile doblika index = 0
 
 }
 
 int metronom() {
   unsigned long cas = millis();
+  int _output = LOW;
   if (cas - cas_predchozi > 100) {
-    cas_predchozi = cas;
-    return HIGH;
+	cas_predchozi = cas;
+	_output = HIGH;
   }
-  return LOW;
+  return _output;
 }
