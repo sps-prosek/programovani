@@ -17,6 +17,7 @@ int index;
 int index_blikani;
 int pocet_tiknuti;
 int pocet_tiknuti_predchozi;
+byte blikej;
 unsigned long cas_predchozi;
 
 void setup()
@@ -29,21 +30,24 @@ void loop()
 {
   if (Serial.available() > 0) {
     char znak = Serial.read();
-    if (znak == '.' || znak == '-' || index < 6) {
-      pole[index] = znak;
-      index++;
-      if (index == 6) {
+	if (index < 6) {
+	  if (znak == '.' || znak == '-') {
+		pole[index] = znak;
+		index++;
+	  }
+      if (index == 6 || znak == '/') {
 		index_blikani = 0;
         pocet_tiknuti = 0;
         pocet_tiknuti_predchozi = 0;
         cas_predchozi = millis();
+		blikej = 1;
       }
     }
   }
   
   if (metronom()) pocet_tiknuti++;
   
-  if (index == 6) {
+  if (index == 6 || blikej) {
     
 	if (pole[index_blikani] == '.') {
       if (pocet_tiknuti - pocet_tiknuti_predchozi < 1) digitalWrite(LED_BUILTIN, HIGH);
@@ -67,7 +71,10 @@ void loop()
       }
     }
 	
-	if (index_blikani == 6) index = 0;
+	if (index_blikani == index) {
+		index = 0;
+		blikej = 0;
+	}
 	
   }
 
@@ -76,7 +83,7 @@ void loop()
 int metronom() {
   unsigned long cas = millis();
   int _output = LOW;
-  if (cas - cas_predchozi > 100) {
+  if (cas - cas_predchozi > 500) {
 	cas_predchozi = cas;
 	_output = HIGH;
   }
