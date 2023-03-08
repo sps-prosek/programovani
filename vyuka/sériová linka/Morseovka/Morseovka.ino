@@ -43,26 +43,28 @@ void loop()
   if (metronom()) pocet_tiknuti++;
   
   if (index == 6) {
-    if (pole[index_blikani] == '.') {
+    
+	if (pole[index_blikani] == '.') {
       if (pocet_tiknuti - pocet_tiknuti_predchozi < 1) digitalWrite(LED_BUILTIN, HIGH);
       else {
         digitalWrite(LED_BUILTIN, LOW);
-        if (pocet_tiknuti - pocet_tiknuti_predchozi > 2) {
+        if (pocet_tiknuti - pocet_tiknuti_predchozi > 1) {
            index_blikani++;
         	pocet_tiknuti_predchozi = pocet_tiknuti;       
         }
       }
     }
-    if (pole[index_blikani] == '-') {
+	
+	if (pole[index_blikani] == '-') {
       if (pocet_tiknuti - pocet_tiknuti_predchozi < 3) digitalWrite(LED_BUILTIN, HIGH);
-      else digitalWrite(LED_BUILTIN, LOW);
+      else {
+        digitalWrite(LED_BUILTIN, LOW);
+        if (pocet_tiknuti - pocet_tiknuti_predchozi > 3) {
+           index_blikani++;
+        	pocet_tiknuti_predchozi = pocet_tiknuti;       
+        }
+      }
     }
-    
-    /*
-    pocet_tiknuti_predchozi = pocet_tiknuti
-    index_blikani++
-    */
-    
   }
   
   // jakmile doblika index = 0
