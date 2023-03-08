@@ -33,6 +33,7 @@ void loop()
       pole[index] = znak;
       index++;
       if (index == 6) {
+		index_blikani = 0;
         pocet_tiknuti = 0;
         pocet_tiknuti_predchozi = 0;
         cas_predchozi = millis();
@@ -65,6 +66,9 @@ void loop()
         }
       }
     }
+	
+	if (index_blikani == 6) index = 0;
+	
   }
   
   // jakmile doblika index = 0
