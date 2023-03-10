@@ -23,8 +23,19 @@ void loop() {
 
 }
 
-void napln_pole() {
-  
+void napln_pole(int p) {
+
+  int _p;
+
+  if (p < 0) _p = 0;
+  else if (p > 16) _p = 16;
+  else _p = p;
+
+  for (int i = 0; i < 16; i++) {
+    if (i < _p) radek[i] = '#';
+    else radek[i] = '_';
+  }
+
 }
 
 // funkce prevadi hlasitost od 0 do 100 na pocet znaku od 0 do 16
