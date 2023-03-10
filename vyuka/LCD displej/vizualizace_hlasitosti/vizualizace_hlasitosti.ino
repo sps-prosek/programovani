@@ -11,8 +11,9 @@ void setup() {
 
 void loop() {
 
-  // vypis poctu znaku, ktere odpovidaji aktualni hlasitosti
-  Serial.println(hlasitost_na_pocet_znaku(hlasitost));
+  int pocet_znaku = hlasitost_na_pocet_znaku(hlasitost);
+  napln_pole(pocet_znaku);
+  zobraz_hlasitost();
   
   // prodleva pred zmenou hlasitosti
   delay(100);
@@ -21,6 +22,10 @@ void loop() {
   if (hlasitost < 100) hlasitost++;
   else hlasitost = 0;
 
+}
+
+void zobraz_hlasitost() {
+  Serial.println(radek[0]);
 }
 
 void napln_pole(int p) {
