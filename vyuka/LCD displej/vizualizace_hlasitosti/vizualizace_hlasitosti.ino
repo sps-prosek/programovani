@@ -25,7 +25,10 @@ void loop() {
 }
 
 void zobraz_hlasitost() {
-  Serial.println(radek[0]);
+  for (int i = 0; i < 16; i++) {
+    Serial.write(radek[i]);
+  }
+  Serial.println();
 }
 
 void napln_pole(int p) {
