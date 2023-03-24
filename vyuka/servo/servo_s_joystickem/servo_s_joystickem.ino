@@ -14,7 +14,10 @@ void setup() {
 void loop() {
   tikani();
   if (tik) {
-  
+    int joystick = analogRead(A0);
+    if (joystick > 512 + 10) pozice++;
+    else if (joystick < 512 - 10) pozice--;
+    moje_servo.write(pozice);
   }
 }
 
