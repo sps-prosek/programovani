@@ -2,8 +2,6 @@
 #define IN2 5
 #define PWM 3
 
-byte rychlost;
-
 void setup() {
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
@@ -11,12 +9,24 @@ void setup() {
 }
 
 void loop() {
+  int potenciometr = analogRead(A0);
+  int rychlost = map(potenciometr, 0, 1023, -255, 255);
+
+  if (rychlost > 0) motorTam();
+  else {
+    rychlost = -1*rychlost;
+    motorSem();
+  }
+  
+  analogWrite(PWM, rychlost);
+}
+
+void motorTam() {
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
-  int potenciometr = analogRead(A0);
-  //rychlost = potenciometr/4;
-  rychlost = map(potenciometr, 0, 1023, 0, 255);
-  analogWrite(PWM, rychlost);
-  delay(100);
-  //rychlost++;
+}
+
+void motorSem() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
 }
