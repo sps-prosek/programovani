@@ -1,54 +1,21 @@
-int ledPin = 13;
-int dotDuration = 100;
-int dashDuration = 3 * dotDuration;
-int interSymbolPause = dotDuration;
-int interCharacterPause = 3 * dotDuration;
-int interWordPause = 7 * dotDuration;
+#include <Servo.h>
 
-bool isBlinking = false;
-bool hasNewData = false;
-String morseMessage = "";
+Servo moje_servo;
+int pozice = 90;
+byte tik;
+unsigned long cas_predtim;
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
-  Serial.begin(19200);
+  moje_servo.attach(3);
+  moje_servo.write(pozice);
+  Serial.begin(9600);
 }
 
 void loop() {
-  if (Serial.available()) {
-    char c = Serial.read();
-    if (c == '/' && morseMessage.length() > 0) {
-      hasNewData = true;
-    } else if (c == '-' || c == '.') {
-      morseMessage += c;
-    }
+  tikani();
+  if (tik) {
+    int joystick = analogRead(A0);
+    if (joystick > 512 + 10) pozice++;
+    else if (joystick < 512 - 10) pozice--;
+    moje_servo.write(pozice);
   }
-
-  if (hasNewData && !isBlinking) {
-    isBlinking = true;
-    for (int i = 0; i < morseMessage.length(); i++) {
-      char c = morseMessage.charAt(i);
-      if (c == '-') {
-        blink(dashDuration);
-      } else if (c == '.') {
-        blink(dotDuration);
-      }
-      delay(interSymbolPause);
-    }
-    resetBlinking();
-    Serial.println("Přenos byl dokončen.");
-  }
-}
-
-void blink(int duration) {
-  digitalWrite(ledPin, HIGH);
-  delay(duration * dotDuration);
-  digitalWrite(ledPin, LOW);
-  delay(dotDuration);
-}
-
-void resetBlinking() {
-  isBlinking = false;
-  hasNewData = false;
-  morseMessage = "";
-}
