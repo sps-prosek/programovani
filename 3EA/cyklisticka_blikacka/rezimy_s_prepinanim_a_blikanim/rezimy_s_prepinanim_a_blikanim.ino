@@ -32,26 +32,29 @@ void loop() {
   switch (rezim) {
     case 0:  // LED nesvítí
       stav_led = LOW;
+      digitalWrite(PIN_LED, stav_led);
       break;
     case 1:  // LED svítí souvisle
       stav_led = HIGH;
+      digitalWrite(PIN_LED, stav_led);
       break;
     case 2:  // LED bliká pomalu
       T = 1000;
       if (tik) stav_led = !stav_led;
+      digitalWrite(PIN_LED, stav_led);
       break;
     case 3:  // LED bliká rychle
       T = 200;
       if (tik) stav_led = !stav_led;
+      digitalWrite(PIN_LED, stav_led);
       break;
     case 4:  // LED mění plynule intenzitu
-
+      analogWrite(PIN_LED, 255.0*(sin(millis()/1000.0)+1)/2.0);
       break;
     default:  // neznámý režim
 
       break;
   }
-  digitalWrite(PIN_LED, stav_led);
 }
 
 void tikani(int T) {
