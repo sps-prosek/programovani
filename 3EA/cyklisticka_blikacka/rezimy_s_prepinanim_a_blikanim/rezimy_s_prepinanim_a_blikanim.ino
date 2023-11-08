@@ -1,6 +1,6 @@
 #define PIN_BTN 2
 #define PIN_LED 5
-#define T       1000
+//#define T       1000
 
 int tik = LOW;
 
@@ -13,11 +13,14 @@ void setup() {
 }
 
 void loop() {
-  tikani();
   static int rezim = 0;
   static int stav_tlacitka_predchozi = HIGH;
   static int stav_led = LOW;
+  static int T = 1000;
   int stav_tlacitka = digitalRead(PIN_BTN);
+  
+  tikani(T);
+  
   if (stav_tlacitka == LOW && stav_tlacitka_predchozi == HIGH) {
     if (rezim < 4) rezim++;  // rezim += 1;
     else rezim = 0;
@@ -34,10 +37,12 @@ void loop() {
       stav_led = HIGH;
       break;
     case 2:  // LED bliká pomalu
+      T = 1000;
       if (tik) stav_led = !stav_led;
       break;
     case 3:  // LED bliká rychle
-
+      T = 200;
+      if (tik) stav_led = !stav_led;
       break;
     case 4:  // LED mění plynule intenzitu
 
@@ -49,7 +54,7 @@ void loop() {
   digitalWrite(PIN_LED, stav_led);
 }
 
-void tikani() {
+void tikani(int T) {
   unsigned long cas = millis();
   static unsigned long cas_predtim = 0;
   if (cas - cas_predtim >= T) {
