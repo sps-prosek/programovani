@@ -1,7 +1,9 @@
 #define PIN_BTN 2
+#define PIN_LED 5
 
 void setup() {
   pinMode(PIN_BTN, INPUT_PULLUP);
+  pinMode(PIN_LED, OUTPUT);
   Serial.begin(9600);
 }
 
