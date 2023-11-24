@@ -14,6 +14,7 @@ void loop() {
 
   tikani(T);
 
+  static unsigned long cas_prepnuti_na_sin = 0;
   static int stav_led = LOW;
   static int rezim = 0;
   static int stav_tlacitka_predchozi = HIGH;
@@ -42,9 +43,13 @@ void loop() {
       T = 200;
       if (tik) stav_led = !stav_led;
       digitalWrite(PIN_LED, stav_led);
+      cas_prepnuti_na_sin = millis();
       break;
     case 4:  // LED mění plynule intenzitu
-
+      float w = 1/(2*PI);
+      unsigned int intenzita;
+      intenzita = 255*((-cos(w*(millis() - cas_prepnuti_na_sin)/1000)+1)/2);
+      analogWrite(PIN_LED, intenzita); // 0 - 255
       break;
     default:  // neznámý režim
 
