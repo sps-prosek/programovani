@@ -27,7 +27,7 @@ void loop() {
 
 byte tlacitko_stisknuto() {
   
-  // deklarace promenne pro ulozeni predchoziho stavudigitalniho pinu do pameti
+  // deklarace promenne pro ulozeni predchoziho stavu digitalniho pinu do pameti
   static byte stav_predchozi;
 
   // deklarace promenne pro ulozeni casu detekce posledniho stisknuti
