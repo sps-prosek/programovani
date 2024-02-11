@@ -1,4 +1,4 @@
-#define DEBOUNCE_TIME 	2000
+#define DEBOUNCE_TIME 	200
 #define	PIN_BTN			    4
 
 void setup() {
