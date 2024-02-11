@@ -4,11 +4,7 @@ Funkce debounce obecně slouží jako prevence proti záchěvům při stisku tla
 
 ![sdf](wiring.png)
 
-Při každém stisku tlačítka je uložen čas (v milisekundách), kdy byl stisk detekován.
-
-```
-cas_posledniho_stisknuti = millis();
-```
+Při každém stisku tlačítka je uložen čas `cas_posledniho_stisknuti = millis();`, kdy byl stisk detekován.
 
 Proměnná `cas_posledniho_stisknuti` je statická, což znamená, že její hodnota je uchována mezi každým voláním funkce, v níž je deklarována. Pokud by tak nebylo, tato proměnná by byla při každém volání funkce nulová, a nebylo by možné odměřovat čas mezi jednotlivými stisknutími.
 
