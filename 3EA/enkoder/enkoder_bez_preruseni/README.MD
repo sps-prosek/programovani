@@ -4,6 +4,11 @@ Signály `DT` i `CLK` jsou zapojeny s pull-up rezistorem. Program primárně det
 
 Při pohybu ve směru hodinových ručiček přichází nejdříve náběžná hrana na mnodrém signálu, kdežto při pohybu proti směru ručiček je první náběžná hrana žlutého signálu. Tímto lze snadno detekovat směr otáčení.
 
+
+
 ![sdf](CW.JPG)
 
 ![sdf](CCW.JPG)
+
+`DT` je žlutý
+`CLK` modrý
