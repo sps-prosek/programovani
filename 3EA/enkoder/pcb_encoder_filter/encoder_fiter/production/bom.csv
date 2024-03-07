@@ -1,0 +1,5 @@
+﻿Designator,Footprint,Quantity,Value,LCSC Part #
+"C1, C2",0805,2,C,
+J1,PinSocket_1x05_P2.54mm_Horizontal,1,Conn_01x05_Socket,
+J2,PinHeader_1x05_P2.54mm_Horizontal,1,Conn_01x05_Pin,
+"R1, R2, R3",0805,3,10k,
