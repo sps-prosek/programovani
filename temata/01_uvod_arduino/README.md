@@ -55,6 +55,63 @@ Arduino UNO/Nano + USB kabel, multimetr. Arduino IDE 2.x, ovladač CH340 u klon�
 
 - `3EA/init/init.ino` – v `_archiv/`, přenést do `kod/` jako kostru skici
 
+## Materiály
+
+- `prezentace/prezentace.tex` – **část 1 ze 2**: učivo U1 a U2, zavedení U5, U6, U7.
+  28 slidů na 45 minut. Přehledové téma – každý slide nese jednu myšlenku,
+  záměrně spíš víc krátkých slidů než jeden nabitý.
+  TikZ schémata: cesta kódu od `.ino` do Flash, harvardská architektura ×
+  jednotný adresní prostor, paměťová mapa ATmega328P ve správném měřítku,
+  nahrávání přes bootloader × ICSP.
+  Slide „Čipy zblízka“ je rezerva – při zpoždění se vypustí.
+- Část 2 (Arduino IDE a alternativy, první přeložená a nahraná skica, git a první
+  `commit`) zatím **není napsaná**.
+
+### Klíčové snímky
+
+Prostředí `keyframe` (červený pruh vlevo) je v této prezentaci vyhrazené pro
+snímky, které drží strukturu hodiny. Dělicí snímky sekcí jsou proto vypnuté
+(`\SPSSectionSlidesOff`); `\section` zůstává jen pro záložky v PDF.
+
+| Slide | Klíčový snímek |
+|---:|---|
+| 2 | Co dnes zvládneme – cíle hodiny |
+| 4 | Část 1 (U1): co se dozvíte |
+| 18 | Shrnutí části 1 (U1) |
+| 19 | Část 2 (U2): co se dozvíte |
+| 28 | Shrnutí hodiny – závěr a co příště |
+
+### Rozdělení učiva mezi obě části
+
+| Část | Učivo |
+|---|---|
+| 1 (hotová) | U1, U2, dále U5 (kompilace a křížový překlad), U6 (bootloader, ICSP), U7 (Flash / SRAM / EEPROM) |
+| 2 (chybí) | U3 (Arduino IDE a alternativy), U15 (git – zavedení), praktické ověření U5 a U17 (měření napájecích napětí desky) |
+
+## Obrázky
+
+Všechny čtyři jsou **dodané** a v prezentaci se sázejí (stav k 18. 9. 2026).
+Přípona se do makra `\obrazek` nepíše – přijímá se `.pdf`, `.png` i `.jpg`.
+Kdyby soubor chyběl, vysází se místo obrázku šedý rámeček s popisem, takže
+prezentace jde přeložit i bez nich.
+
+| Soubor | Co je na obrázku |
+|---|---|
+| `01_kde_jsou_mcu` | Koláž „kde všude je mikrokontroler“: pračka, myš, klíček od auta, elektrokolo, nabíječka, ovladač televize |
+| `02_rodina_desek` | Fotografie desek vedle sebe ve stejném měřítku: Arduino UNO, Arduino Nano, Raspberry Pi Pico, STM32 „Blue Pill“, ESP32 |
+| `03_cipy_avr_arm` | Fotografie čipů vedle sebe: ATmega328P v patici DIP-28 a čip ARM v pouzdře LQFP, stejné měřítko |
+| `04_deska_uno_popis` | Deska Arduino UNO s vyznačenými částmi: ATmega328P, převodník USB-UART, krystal 16 MHz, stabilizátor 5 V, konektor ICSP, tlačítko RESET, LED na pinu 13 |
+
+Blokové schémata (cesta kódu, architektury pamětí, paměťová mapa, bootloader ×
+ICSP) jsou nakreslená přímo TikZem v prezentaci – ty se nedodávají. Celé schéma
+desky je v `zdroje/schemata/arduino_uno_rev3_schematic.pdf`, ale na slide je
+příliš podrobné; hodí se spíš jako ukázka „takhle vypadá reálné schéma“.
+
+**Po přidání nebo výměně obrázku je potřeba vynutit překlad:**
+`latexmk -g -xelatex prezentace.tex`. Latexmk chybějící soubor nezná jako
+závislost, takže bez `-g` usoudí, že je PDF aktuální, a obrázek se do něj
+nedostane.
+
 ## Poznámky k výuce
 
 <!-- Co žákům dělalo problém, co příště udělat jinak, časový odhad. -->

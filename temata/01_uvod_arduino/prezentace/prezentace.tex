@@ -1,0 +1,907 @@
+% ---------------------------------------------------------------------------
+% Prezentace k tématu 01 – HW platformy a vývojové prostředí
+% Část 1 ze 2: učivo U1 a U2 (+ zavedení U5, U6, U7)
+%
+% ŠVP: V1, V3 | Učivo: U1 (možnosti tvorby programů pro různé HW platformy),
+% U2 (vybrané platformy AVR a ARM, přednosti a omezení),
+% okrajově U5 (kompilace), U6 (bootloader, ICSP), U7 (rozdělení paměti).
+%
+% Přehledové téma – jde o orientaci v krajině, ne o detaily. Každý slide nese
+% jednu myšlenku; radši víc krátkých slidů než jeden nabitý.
+%
+% ---------------------------------------------------------------------------
+% KLÍČOVÉ SNÍMKY
+% ---------------------------------------------------------------------------
+% Prostředí `keyframe` (červený pruh vlevo) je vyhrazené pro snímky, které
+% drží strukturu hodiny. V této prezentaci je jich pět:
+%   slide  2  Co dnes zvládneme            – cíle hodiny
+%   slide  5  Část 1 (U1): co se dozvíte   – cíle první části
+%   slide 20  Shrnutí části 1 (U1)
+%   slide 21  Část 2 (U2): co se dozvíte   – cíle druhé části
+%   slide 33  Shrnutí hodiny               – závěr + co příště
+% Dělicí snímky sekcí jsou proto vypnuté (\SPSSectionSlidesOff); \section
+% zůstává jen pro záložky v PDF.
+%
+% Slide „Čipy zblízka`` je REZERVA – když se nestíhá, vypustit.
+%
+% Časování (45 min):
+%   0-3    slidy 1-2    cíle hodiny
+%   3-6    slidy 3-4    kde všude je mikrokontroler, proč se tím zabýváme
+%   6-8    slide 5      cíle části U1
+%   8-26   slidy 6-19   U1: platforma, instrukční sada, cesta kódu, úrovně
+%                       programování, HAL, paměti, nahrávání
+%   26-28  slide 20     shrnutí U1
+%   28-30  slide 21     cíle části U2
+%   30-42  slidy 22-32  U2: desky, AVR, ARM, architektura a registry,
+%                       srovnání, kvíz, časté záměny
+%   42-45  slide 33     shrnutí hodiny
+%
+% Snímky 3 a 22 jsou celostránkové fotografie. Šířka 0.82\textwidth je
+% maximum, které se vejde pod titulek; při \textwidth se obrázek dole ořízne
+% (beamer to nehlásí).
+%
+% Překlad:  latexmk -xelatex prezentace.tex
+% ---------------------------------------------------------------------------
+\documentclass[12pt,aspectratio=169]{beamer}
+
+\input{../../../spolecne/styl/preambule}
+
+\renewcommand{\SPSCodeSize}{\scriptsize}
+\renewcommand{\headlineA}{Téma 01 -- HW platformy (U1, U2)}
+
+% Strukturu hodiny nesou klíčové snímky (keyframe), ne dělicí snímky sekcí.
+\SPSSectionSlidesOff
+
+% Správná odpověď v nabídce. Na prvním překrytí vypadá jako ostatní možnosti,
+% červeně se zvýrazní teprve s odkrytím odpovědi (\pause). V režimu handout
+% se překrytí slučují, takže v tištěném klíči je zvýrazněná rovnou.
+\newcommand{\spravne}[1]{\alt<1>{#1}{\pozor{#1}}}
+
+\title{Hardwarové platformy}
+\subtitle{Na jakém stroji náš program běží -- architektury, AVR a ARM \\
+  Programování -- 3.\,ročník (Mechatronika), téma 01}
+
+\begin{document}
+
+\maketitle
+
+% ===== KLÍČOVÝ SNÍMEK: cíle hodiny =========================================
+\begin{keyframe}{Co dnes zvládneme}
+  \begin{itemize}
+    \item Vysvětlím, co je \pozor{hardwarová platforma} a proč se stejný program
+          nepřeloží pro každý procesor.
+    \item Popíšu cestu od zdrojového kódu k programu v paměti mikrokontroleru.
+    \item Porovnám \pozor{AVR a ARM} a u zadané úlohy zdůvodním, kterou platformu bych vybral.
+  \end{itemize}
+  \vfill
+  \pozor{Učivo dle ŠVP:} U1 -- možnosti tvorby programů pro různé hardwarové platformy,
+  U2 -- vybrané platformy (ARM, AVR), jejich přednosti a omezení.
+\end{keyframe}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Kolik mikrokontrolerů jste dnes už použili?}
+  \vspace{-2mm}
+  \begin{center}
+    \obrazek[0.82\textwidth]{../obrazky/01_kde_jsou_mcu}{Koláž: pračka, myš, klíček
+      od auta, elektrokolo, nabíječka, ovladač televize -- kde všude je
+      mikrokontroler}
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Proč se tím zabýváme}
+  Ročně se vyrobí přes \pozor{25 miliard} mikrokontrolerů -- víc než procesorů
+  do PC a mobilů dohromady.
+
+  \vspace{4mm}
+  \begin{block}{Co mají všechny společné}
+    Jedna úloha, žádný operační systém, cena v jednotkách korun, spotřeba
+    v miliampérech, a musí fungovat roky bez restartu.
+  \end{block}
+
+  \vspace{4mm}
+  \pozor{Náš rok:} naučit se pro takový čip napsat program tak, aby fungoval
+  spolehlivě.
+\end{frame}
+
+% ===========================================================================
+\section{U1 -- Možnosti tvorby programů pro různé platformy}
+
+% ===== KLÍČOVÝ SNÍMEK: cíle části U1 =======================================
+\begin{keyframe}{Část 1 (U1): co se dozvíte}
+  \small
+  \begin{enumerate}\itemsep2pt
+    \item Co je hardwarová platforma a co všechno určuje.
+    \item Proč procesor nerozumí jazyku C -- a co s tím dělá překladač.
+    \item Jak z naší skici vznikne program ve Flash paměti čipu.
+    \item Na jakých úrovních se dá pro čip programovat a co která stojí.
+    \item Jak jsou v ATmega328P rozdělené paměti a jak se do nich program dostane.
+  \end{enumerate}
+  \vfill
+  \pozor{Nejde o detaily.} Cílem je orientace: vědět, co se kde děje a jaká slova
+  znamenají co. Podrobnosti přijdou u konkrétních periferií.
+\end{keyframe}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Co je hardwarová platforma}
+  \begin{block}{Definice}
+    \pozor{Hardwarová platforma} je kombinace procesorového jádra, jeho periferií
+    a desky, na které to všechno je. Pro každou platformu vzniká \textbf{jiný}
+    výsledný program -- i když zdrojový kód je stejný.
+  \end{block}
+  \vspace{2mm}
+  \small
+  \begin{tabular}{@{}p{3.1cm}p{3.2cm}p{4.2cm}@{}}
+    \toprule
+    Vrstva & Co určuje & U Arduina UNO \\
+    \midrule
+    \textbf{Architektura jádra} & instrukční sadu, šířku slova, registry
+      & AVR, 8 bitů \\
+    \textbf{Konkrétní čip} & kolik paměti a jaké periferie
+      & ATmega328P \\
+    \textbf{Deska} & napájení, konektory, převodník USB
+      & Arduino UNO R3 \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Když přejdu na jinou platformu}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \begin{exampleblock}{Co zůstane}
+        \small
+        \begin{itemize}
+          \item algoritmus a návrh programu
+          \item jazyk C/C++
+          \item struktura \kod{setup()} / \kod{loop()}
+          \item způsob myšlení o časování a stavech
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \begin{alertblock}{Co se změní}
+        \small
+        \begin{itemize}
+          \item překladač (\kod{avr-gcc} $\to$ \kod{arm-gcc})
+          \item názvy registrů a čísla pinů
+          \item knihovny pro periferie
+          \item napájecí napětí (5 V $\to$ 3,3 V)
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \small
+  \pozor{Proto se to učí takhle:} letos na jedné platformě do hloubky. Přechod na
+  druhou pak není nové programování, jen nové jméno pro tu samou věc.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Stejný řádek v C, jiné instrukce}
+  \begin{center}
+    \small \kod{y = y + 1;} \quad kde \kod{y} je bajt v paměti
+  \end{center}
+  \vspace{-1mm}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \centering \footnotesize \textbf{AVR} (ATmega328P, 8 bitů)
+\begin{vystup}
+lds  r24, 0x0100   ; nacti y
+subi r24, 0xFF     ; pricti 1
+sts  0x0100, r24   ; uloz y
+\end{vystup}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \centering \footnotesize \textbf{ARM} Cortex-M (32 bitů)
+\begin{vystup}
+ldr  r3, [pc, #16] ; adresa y
+ldrb r2, [r3, #0]  ; nacti y
+adds r2, r2, #1    ; pricti 1
+strb r2, [r3, #0]  ; uloz y
+\end{vystup}
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \footnotesize
+  Jiné názvy instrukcí, jiný počet registrů, jiná šířka slova. Procesor
+  nerozumí jazyku C -- rozumí \pozor{jen své instrukční sadě}. Překladač je ten,
+  kdo náš kód do ní přeloží, a pro každou architekturu je to \textbf{jiný překladač}.
+  (Výpisy jsou zjednodušené.)
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Křížový překlad -- překládám na PC, běží to na čipu}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small
+      Na PC nemáme AVR procesor, a přesto pro něj umíme vyrobit program.
+      Tomu se říká \pozor{křížový překlad} (cross-compile).
+
+      \vspace{3mm}
+      \footnotesize
+      \begin{tabular}{@{}ll@{}}
+        \toprule
+        Cíl & Sada nástrojů \\
+        \midrule
+        PC (Windows) & \kod{gcc}, \kod{cl.exe} \\
+        AVR & \kod{avr-gcc}, \kod{avrdude} \\
+        ARM Cortex-M & \kod{arm-none-eabi-gcc} \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \small
+      Arduino IDE tyto nástroje obsahuje a volá je za nás. Proto se instalace
+      „jednoho programu`` postará o celý řetězec.
+
+      \vspace{2mm}
+      \pozor{Slovníček:} sada nástrojů pro jednu platformu se souhrnně nazývá
+      \textbf{toolchain}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz -- proč nejde \kod{program.exe} nahrát do Arduina?}
+  \footnotesize
+  \begin{itemize}\itemsep2pt
+    \item[A)] Jde to, jen se musí přejmenovat na \kod{.hex}.
+    \item[B)] Nejde, protože \kod{.exe} je moc velký soubor.
+    \item[C)] \spravne{Nejde, protože obsahuje instrukce x86, volání operačního
+      systému a počítá s gigabajty RAM.}
+    \item[D)] Nejde, protože Arduino umí jen jazyk C, ne C++.
+  \end{itemize}
+
+  \pause
+  \vspace{2mm}
+  \begin{exampleblock}{C)}
+    \footnotesize Nic z toho na ATmega328P není: jiná instrukční sada, žádný
+    operační systém, 2 kB RAM. Výsledný program je proto vždycky svázaný
+    s platformou, pro kterou byl přeložený.
+  \end{exampleblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Cesta od naší skici do paměti čipu}
+  \vspace{-1mm}
+  \begin{center}
+    \begin{tikzpicture}[
+      font=\scriptsize,
+      box/.style={draw=SPSDark, fill=SPSLight, rounded corners=2pt,
+                  minimum height=8mm, text width=18mm, align=center, inner sep=0.8mm},
+      fil/.style={draw=SPSRed, thick, fill=SPSRed!8, rounded corners=2pt,
+                  minimum height=7mm, text width=14mm, align=center, inner sep=0.8mm},
+      arr/.style={-Stealth, thick, SPSGrey}]
+
+      \node[fil] (ino)  at (0,0)   {\texttt{skica.ino}};
+      \node[box] (pre)  at (2.5,0) {preprocesor\\[-0.6mm]{\tiny \texttt{\#include}}};
+      \node[box] (kom)  at (5.1,0) {překladač\\[-0.6mm]{\tiny \texttt{avr-g++}}};
+      \node[fil] (obj)  at (7.5,0) {\texttt{.o}};
+
+      \node[box] (lnk)  at (0,-1.9)   {linker\\[-0.6mm]{\tiny + knihovny}};
+      \node[fil] (elf)  at (2.5,-1.9) {\texttt{.elf}};
+      \node[box] (hex)  at (5.1,-1.9) {\texttt{avr-objcopy}};
+      \node[fil] (fhex) at (7.5,-1.9) {\texttt{.hex}};
+      \node[box, fill=SPSRed!15, draw=SPSRed, thick, text width=20mm]
+            (fl) at (10.1,-1.9) {\texttt{avrdude}\\[-0.6mm]{\tiny do Flash}};
+
+      \draw[arr] (ino) -- (pre);
+      \draw[arr] (pre) -- (kom);
+      \draw[arr] (kom) -- (obj);
+      \draw[arr] (obj.south) -- ++(0,-0.5) -| (lnk.north);
+      \draw[arr] (lnk) -- (elf);
+      \draw[arr] (elf) -- (hex);
+      \draw[arr] (hex) -- (fhex);
+      \draw[arr] (fhex) -- (fl);
+    \end{tikzpicture}
+  \end{center}
+  \vspace{2mm}
+  \footnotesize
+  V Arduino IDE se tohle všechno schová za jedno tlačítko. Když se objeví chyba,
+  je ale dobré vědět, \pozor{ve kterém kroku} vznikla: chyba v syntaxi je
+  z překladače, „undefined reference`` z linkeru a „nelze otevřít port``
+  z nahrávání.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Co Arduino IDE přidá k našemu kódu}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+// tohle do skici nepiseme,
+// pridá se to samo:
+#include <Arduino.h>
+
+void blikni();   // prototypy
+
+int main(void) {
+  init();
+  setup();
+  for (;;) { loop(); }
+}
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \small
+      Proto v Arduinu funguje volání funkce, která je v souboru \textbf{níž} --
+      prototyp za nás doplní IDE.
+
+      \vspace{2mm}
+      \pozor{Důsledek:} skica \kod{.ino} \textbf{není čisté C}. Je to C++ s několika
+      doplňky, a běžným \kod{gcc} se nepřeloží.
+
+      \vspace{2mm}
+      \scriptsize
+      V bloku 15 proto budeme kód psát do \kod{.h} a \kod{.cpp} -- tam už žádná
+      magie není a platí normální pravidla jazyka.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Možnosti tvorby programů (U1)}
+  \small Pro stejný čip lze psát na několika úrovních. Volba je vždy kompromis:
+  \vspace{1mm}
+
+  \scriptsize
+  \begin{tabular}{@{}p{2.4cm}p{3.7cm}p{1.6cm}p{1.6cm}@{}}
+    \toprule
+    Úroveň & Jak to vypadá & Rychlost & Pracnost \\
+    \midrule
+    \textbf{Asembler} & jednotlivé instrukce & nejlepší & velmi vysoká \\
+    \textbf{C/C++ s registry} & \kod{PORTB |= (1<<5);} & výborná & vysoká \\
+    \textbf{C/C++ s HAL} & \kod{HAL\_GPIO\_WritePin(...)} & dobrá & střední \\
+    \textbf{Arduino} & \kod{digitalWrite(13, HIGH);} & horší & nízká \\
+    \textbf{MicroPython} & \kod{pin.value(1)} & nejhorší & nejnižší \\
+    \bottomrule
+  \end{tabular}
+  \vspace{2mm}
+
+  \footnotesize
+  \pozor{Letos:} Arduino framework -- abychom se soustředili na návrh programu.
+  V bloku 03 se podíváme i „pod něj``, na registry: \kod{digitalWrite()} je
+  desítky instrukcí tam, kde by stačila jedna.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Co je HAL -- vrstva abstrakce hardwaru}
+  \begin{block}{\kod{HAL} = Hardware Abstraction Layer, vrstva abstrakce hardwaru}
+    \footnotesize
+    Knihovna, obvykle od \textbf{výrobce čipu}, která schová práci s registry za
+    funkce s čitelnými názvy. Program pak neříká \emph{„nastav pátý bit v registru
+    PORTB``}, ale \emph{„nastav pin PB5 do jedničky``}.
+  \end{block}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+// primo registr (bez HAL)
+PORTB |= (1 << 5);
+
+// pres HAL (STM32)
+HAL_GPIO_WritePin(GPIOB,
+                  GPIO_PIN_5,
+                  GPIO_PIN_SET);
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      \textbf{Co za to dostanu:} kód se dá přenést na jiný čip téže řady bez
+      přepisování a je čitelnější.
+
+      \vspace{2mm}
+      \textbf{Co to stojí:} funkce navíc kontroluje parametry, takže je
+      \pozor{pomalejší a delší} než jeden řádek s registrem.
+    \end{column}
+  \end{columns}
+  \scriptsize
+  \pozor{Souvislost:} \kod{digitalWrite()} je taky HAL, jen o úroveň výš.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Dvě architektury pamětí}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \centering \footnotesize \textbf{Harvardská} -- AVR
+      \vspace{1mm}
+
+      \begin{tikzpicture}[font=\tiny,
+        m/.style={draw=SPSDark, fill=SPSLight, rounded corners=2pt,
+                  minimum width=20mm, minimum height=7mm, align=center},
+        c/.style={draw=SPSRed, thick, fill=SPSRed!10, rounded corners=2pt,
+                  minimum width=16mm, minimum height=8mm},
+        a/.style={-Stealth, thick, SPSGrey}]
+        \node[m] (f) at (0,1.2) {Flash\\program};
+        \node[c] (cpu) at (0,0) {jádro};
+        \node[m] (s) at (0,-1.2) {SRAM\\data};
+        \draw[a] (cpu) -- (f) node[midway,right,SPSGrey] {\,sběrnice 1};
+        \draw[a] (cpu) -- (s) node[midway,right,SPSGrey] {\,sběrnice 2};
+      \end{tikzpicture}
+
+      \vspace{1mm}
+      \scriptsize Oddělené sběrnice \textbf{i oddělené adresy}. Adresa 0x0100
+      ve Flash a v SRAM jsou dvě různá místa.
+      \vspace{1mm}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \centering \footnotesize \textbf{Jednotný prostor} -- ARM Cortex-M
+      \vspace{1mm}
+
+      \begin{tikzpicture}[font=\tiny,
+        m/.style={draw=SPSDark, fill=SPSLight, rounded corners=2pt,
+                  minimum width=30mm, minimum height=7mm, align=center},
+        c/.style={draw=SPSRed, thick, fill=SPSRed!10, rounded corners=2pt,
+                  minimum width=16mm, minimum height=8mm},
+        a/.style={-Stealth, thick, SPSGrey}]
+        \node[m] (f) at (0,1.2) {jedna adresní mapa\\Flash + SRAM + periferie};
+        \node[c] (cpu) at (0,0) {jádro};
+        \node[m, minimum width=30mm] (s) at (0,-1.2) {ukazatel může mířit\\kamkoliv};
+        \draw[a] (cpu) -- (f);
+        \draw[a] (cpu) -- (s);
+      \end{tikzpicture}
+
+      \vspace{1mm}
+      \scriptsize Jeden adresní prostor. Ukazatel na konstantu ve Flash se
+      používá stejně jako na proměnnou. (Sběrnice uvnitř jádra oddělené být
+      mohou i nemusí -- podrobněji v části U2.)
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \scriptsize
+  \pozor{Důsledek pro nás:} na AVR se textové konstanty kopírují při startu do SRAM.
+  Proto \kod{Serial.println(F("text"))} -- \kod{F()} je nechá ve Flash (blok 09).
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Paměti ATmega328P (U7)}
+  \vspace{2mm}
+  \begin{center}
+    \begin{tikzpicture}[font=\scriptsize]
+      % 1 kB = 0.25 cm  ->  Flash 32 kB = 8 cm, SRAM 2 kB = 0.5 cm, EEPROM 1 kB = 0.25 cm
+      \draw[thick, draw=SPSDark, fill=SPSRed!15] (0,0)     rectangle ++(8,0.55);
+      \node[anchor=west] at (8.2,0.275) {\textbf{Flash 32 kB}};
+      \draw[thick, draw=SPSDark, fill=SPSLight]  (0,-0.85) rectangle ++(0.5,0.55);
+      \node[anchor=west] at (0.7,-0.575) {\textbf{SRAM 2 kB}};
+      \draw[thick, draw=SPSDark, fill=SPSGrey!25] (0,-1.7) rectangle ++(0.25,0.55);
+      \node[anchor=west] at (0.45,-1.425) {\textbf{EEPROM 1 kB}};
+    \end{tikzpicture}
+  \end{center}
+  \vspace{3mm}
+  \small
+  \pozor{To je celá paměť, se kterou letos pracujeme.} Program se vejde téměř vždy;
+  co dělá potíže, je \textbf{SRAM} -- těch 2048 bajtů se spotřebuje překvapivě rychle.
+  Proto se od začátku hlídá, kolik toho který program zabere.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Co je v které paměti}
+  \footnotesize
+  \begin{tabular}{@{}p{1.9cm}p{4.2cm}p{4.4cm}@{}}
+    \toprule
+    Paměť & Co v ní je & Vlastnosti \\
+    \midrule
+    \textbf{Flash} & náš program, textové konstanty, 0,5 kB bootloader
+      & po vypnutí zůstane, přepisuje se jen při nahrávání \\
+    \addlinespace
+    \textbf{SRAM} & proměnné, pole, zásobník, buffery \kod{Serial}
+      & po vypnutí se \pozor{smaže}, rychlá, a je jí málo \\
+    \addlinespace
+    \textbf{EEPROM} & nastavení, které má přežít vypnutí
+      & zůstane, zapisuje se pomalu a jen \textasciitilde 100\,000 krát \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small
+  \pozor{Typická otázka u zkoušení:} kam patří text \kod{"Teplota: "}? Do Flash --
+  ale bez \kod{F()} se při startu zkopíruje i do SRAM, takže zabere obojí.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Jak se program dostane do Flash (U6)}
+  \vspace{1mm}
+  \begin{center}
+    \begin{tikzpicture}[font=\scriptsize,
+      b/.style={draw=SPSDark, fill=SPSLight, rounded corners=2pt,
+                minimum height=7.5mm, text width=20mm, align=center, inner sep=0.8mm},
+      r/.style={draw=SPSRed, thick, fill=SPSRed!10, rounded corners=2pt,
+                minimum height=7.5mm, text width=20mm, align=center, inner sep=0.8mm},
+      a/.style={-Stealth, thick, SPSGrey}]
+
+      \node[font=\scriptsize\bfseries, anchor=west] at (-1.0,0.75)
+        {1. Bootloader -- běžné nahrávání};
+      \node[b] (pc1) at (0,0)   {PC, USB kabel};
+      \node[b] (cv)  at (3.0,0) {převodník\\{\tiny USB\,$\to$\,sériová linka}};
+      \node[r] (bl)  at (6.0,0) {bootloader\\v čipu};
+      \node[b] (fl1) at (9.0,0) {Flash};
+      \draw[a] (pc1) -- (cv); \draw[a] (cv) -- (bl); \draw[a] (bl) -- (fl1);
+
+      \node[font=\scriptsize\bfseries, anchor=west] at (-1.0,-1.3)
+        {2. ICSP -- programátorem přímo};
+      \node[b] (pc2) at (0,-2.05)   {PC};
+      \node[b] (pg)  at (3.0,-2.05) {programátor\\{\tiny např. USBasp}};
+      \node[r] (icsp)at (6.0,-2.05) {piny ICSP\\{\tiny SPI + RESET}};
+      \node[b] (fl2) at (9.0,-2.05) {Flash};
+      \draw[a] (pc2) -- (pg); \draw[a] (pg) -- (icsp); \draw[a] (icsp) -- (fl2);
+    \end{tikzpicture}
+  \end{center}
+  \vspace{2mm}
+  \small
+  Bootloader je \pozor{program, který nahrává jiný program}. Po resetu chvíli čeká,
+  jestli po sériové lince nepřijde nový kód; když nepřijde, spustí ten starý.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Bootloader nebo ICSP -- kdy co}
+  \footnotesize
+  \begin{tabular}{@{}p{2.2cm}p{4.0cm}p{4.2cm}@{}}
+    \toprule
+     & \textbf{Bootloader} & \textbf{ICSP} \\
+    \midrule
+    Potřebuje    & jen USB kabel & programátor (USBasp, druhé Arduino) \\
+    \addlinespace
+    Cena za to   & ubere 0,5 kB Flash, zdrží start & nic \\
+    \addlinespace
+    Nový, prázdný čip & nenahraje (bootloader tam ještě není) & nahraje \\
+    \addlinespace
+    Kdy se použije & běžná výuka a vývoj & výroba, oživení čipu, potřeba celé Flash \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small
+  \pozor{Praktický dopad na nás:} celý rok nahráváme přes bootloader a USB.
+  ICSP stačí znát -- a vědět, že těch 0,5 kB Flash chybí, když se program
+  „skoro`` vejde.
+\end{frame}
+
+% ===== KLÍČOVÝ SNÍMEK: shrnutí části U1 ====================================
+\begin{keyframe}{Shrnutí části 1 (U1)}
+  \footnotesize
+  \begin{itemize}\itemsep2pt
+    \item \pozor{Platforma} $=$ jádro $+$ čip $+$ deska. Každé jádro má vlastní
+          instrukční sadu, a tedy vlastní překladač.
+    \item Program se vyrábí \pozor{křížovým překladem} na PC:
+          \kod{.ino} $\to$ preprocesor $\to$ překlad $\to$ linker $\to$ \kod{.hex}
+          $\to$ nahrání do Flash.
+    \item Skica \kod{.ino} není čisté C -- IDE k ní přidá \kod{Arduino.h},
+          prototypy a \kod{main()}.
+    \item Programovat se dá od \pozor{asembleru} po \pozor{MicroPython}; Arduino
+          framework je kompromis mezi pracností a rychlostí.
+    \item AVR je \pozor{harvardská} architektura -- Flash a SRAM mají oddělené adresy.
+    \item Flash 32 kB zůstane, \pozor{SRAM 2 kB} se maže a je jí málo,
+          EEPROM 1 kB je pomalá.
+    \item Nahrává se přes \pozor{bootloader} (jen USB, ubere 0,5 kB) nebo
+          \pozor{ICSP} (programátor, uvolní celou Flash).
+  \end{itemize}
+\end{keyframe}
+
+% ===========================================================================
+\section{U2 -- Vybrané platformy: AVR a ARM}
+
+% ===== KLÍČOVÝ SNÍMEK: cíle části U2 =======================================
+\begin{keyframe}{Část 2 (U2): co se dozvíte}
+  \small
+  \begin{enumerate}\itemsep2pt
+    \item Co je AVR a co je ARM Cortex-M.
+    \item Jaké má každá z nich přednosti a jaká omezení.
+    \item Čím se liší uvnitř -- sada instrukcí, paměť, registry.
+    \item Podle čeho se platforma pro konkrétní úlohu vybírá.
+    \item Co se v téhle oblasti běžně plete -- a proč na tom záleží.
+  \end{enumerate}
+  \vfill
+  \pozor{Na konci této části} byste měli u zadané úlohy umět říct „vzal bych tohle,
+  protože\dots`` a uvést dva konkrétní důvody.
+\end{keyframe}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Desky, o kterých bude řeč}
+  \vspace{-2mm}
+  \begin{center}
+    \obrazek[0.82\textwidth]{../obrazky/02_rodina_desek}{Fotografie desek vedle sebe:
+      Arduino UNO, Arduino Nano, Raspberry Pi Pico, STM32 „Blue Pill``, ESP32}
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{AVR -- na čem se letos učíme}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small
+      8bitová architektura firmy Atmel, na trhu \textbf{od roku 1996}.
+      Dnes ji vlastní Microchip a pořád se vyrábí.
+
+      \vspace{3mm}
+      Právě ta dlouhá životnost je důvod, proč je kolem ní tolik hotových
+      knihoven, návodů a odpovědí na fóru -- a proč se na ní dobře začíná.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      \textbf{ATmega328P v Arduinu UNO}
+      \begin{itemize}
+        \item 8 bitů, 16 MHz
+        \item 32 kB Flash, 2 kB SRAM, 1 kB EEPROM
+        \item 20 I/O pinů, ADC 10 bitů
+        \item 3 časovače
+        \item napájení 1,8--5,5 V
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{AVR -- přednosti a omezení}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{Přednosti}
+        \footnotesize
+        \begin{itemize}
+          \item snese 5 V i kolísavé napájení
+          \item čitelná dokumentace (\textasciitilde 300 stran)
+          \item jedna instrukce za takt -- časování se dá spočítat
+          \item v patici DIP, dá se vyměnit
+          \item obrovská nabídka knihoven a návodů
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Omezení}
+        \footnotesize
+        \begin{itemize}
+          \item 8 bitů -- \kod{float} se počítá softwarově a pomalu
+          \item 2 kB SRAM
+          \item 16 MHz
+          \item žádná Wi-Fi ani USB
+          \item ADC jen 10 bitů
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \small
+  \pozor{Proč se na tom učí:} málo možností znamená, že je vidět, co program dělá.
+  Na 8 bitech a 2 kB se nedá „zamést`` neefektivní řešení pod koberec.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{ARM Cortex-M -- kam se jde dál}
+  \small
+  ARM sám čipy nevyrábí -- \pozor{licencuje jádro} a čipy staví desítky firem
+  (ST, NXP, Nordic, Raspberry Pi). Proto je nabídka tak široká.
+
+  \vspace{3mm}
+  \footnotesize
+  \begin{tabular}{@{}p{3.2cm}p{3.2cm}p{4.4cm}@{}}
+    \toprule
+    Čip & Jádro & Parametry \\
+    \midrule
+    STM32F103 („Blue Pill``) & Cortex-M3, 72 MHz & 64 kB Flash, 20 kB SRAM, ADC 12 b \\
+    \addlinespace
+    RP2040 (Pi Pico) & 2$\times$ Cortex-M0+, 133 MHz & 264 kB SRAM, Flash externí \\
+    \addlinespace
+    nRF52840 & Cortex-M4F, 64 MHz & Bluetooth, 256 kB SRAM \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{ARM -- přednosti a omezení}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{Přednosti}
+        \footnotesize
+        \begin{itemize}
+          \item 32 bitů, desítky až stovky MHz
+          \item mnohem víc paměti
+          \item bohaté periferie (USB, CAN, Ethernet)
+          \item hardwarový \kod{float} u M4F
+          \item hluboké režimy spánku
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Omezení}
+        \footnotesize
+        \begin{itemize}
+          \item jen 3,3 V -- 5 V na pinu čip zničí
+          \item složitější rozběh (hodiny, napájecí domény)
+          \item datasheet má tisíc stran
+          \item čip obvykle nelze vyměnit
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \small
+  \pozor{Nejčastější zničený čip ve školní laboratoři:} ARM, na který někdo přivedl
+  5 V ze staré desky. Napájecí úroveň se kontroluje \textbf{před} zapojením.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Obě jsou RISC -- a přesto jiné}
+  \small
+  \pozor{RISC} (\textit{Reduced Instruction Set Computer}) znamená málo
+  jednoduchých instrukcí, zato rychlých. Opak je CISC -- procesory x86 v PC.
+  \vspace{2mm}
+
+  \scriptsize
+  \begin{tabular}{@{}p{2.1cm}p{4.3cm}p{4.3cm}@{}}
+    \toprule
+     & \textbf{AVR} & \textbf{ARM} \\
+    \midrule
+    Sada instrukcí & RISC, 8 bitů; většina instrukcí za 1 takt
+      & RISC, 32 bitů; sady ARM, Thumb, Thumb-2 \\
+    \addlinespace
+    Paměť & striktně harvardská
+      & podle jádra: von Neumannova (M0, M0+) nebo modifikovaná harvardská (M3, M4) \\
+    \addlinespace
+    Registry & 32 registrů po 8 bitech & 16 registrů po 32 bitech \\
+    \addlinespace
+    Licence & proprietární, Microchip (dříve Atmel)
+      & ARM Ltd. jádro jen navrhuje a licencuje (ST, NXP, Apple) \\
+    \bottomrule
+  \end{tabular}
+  \vspace{2mm}
+
+  \footnotesize
+  \pozor{Cortex-M umí jen Thumb-2}, ne původní 32bitovou sadu ARM. Instrukce jsou
+  kratší, takže se program vejde do menší Flash.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Registry -- tam, kde se opravdu počítá}
+  \begin{block}{Obě architektury jsou typu \textit{load/store}}
+    \footnotesize
+    Aritmetika neumí sáhnout přímo do RAM. Hodnota se musí nejdřív \textbf{načíst}
+    do registru, tam se s ní počítá, a výsledek se \textbf{uloží} zpět.
+  \end{block}
+  \vspace{1mm}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \footnotesize \textbf{AVR}
+      \begin{itemize}
+        \scriptsize
+        \item 32 registrů po 8 bitech, \kod{R0}--\kod{R31}
+        \item poslední tři páry slouží jako 16bitové ukazatele
+              \kod{X}, \kod{Y}, \kod{Z}
+        \item registry visí přímo na ALU -- operace nad dvěma registry
+              proběhne za jeden takt
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \footnotesize \textbf{ARM Cortex-M}
+      \begin{itemize}
+        \scriptsize
+        \item 16 registrů po 32 bitech, \kod{R0}--\kod{R15}
+        \item obecných je jich ale jen 13 (\kod{R0}--\kod{R12})
+        \item \kod{R13} $=$ \kod{SP} (vrchol zásobníku),
+              \kod{R14} $=$ \kod{LR} (návratová adresa),
+              \kod{R15} $=$ \kod{PC} (další instrukce)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \footnotesize
+  \pozor{Zpátky k tomu výpisu na začátku hodiny:} \kod{lds} a \kod{sts} u AVR,
+  \kod{ldr} a \kod{str} u ARM -- to jsou přesně ty \textit{load} a \textit{store}.
+  Sčítalo se až potom, a jen mezi registry.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Srovnání -- co rozhoduje při výběru}
+  \footnotesize
+  \begin{tabular}{@{}p{3.0cm}p{3.6cm}p{4.2cm}@{}}
+    \toprule
+     & \textbf{AVR} (ATmega328P) & \textbf{ARM} (např. RP2040) \\
+    \midrule
+    Šířka slova    & 8 bitů                & 32 bitů \\
+    Frekvence      & 16 MHz                & 133 MHz \\
+    SRAM           & 2 kB                  & 264 kB \\
+    Napájení       & 1,8--5,5 V (snese 5 V)& 1,8--3,6 V (jen 3,3 V) \\
+    \kod{float}    & softwarově, pomalu    & rychle (u M4F hardwarově) \\
+    Periferie      & UART, I2C, SPI, ADC   & + USB, PWM bloky, PIO, DMA \\
+    Rozběh čipu    & funguje hned          & nastavit hodiny a napájení \\
+    Dokumentace    & \textasciitilde 300 stran, čitelná & \textasciitilde 600--1000 stran \\
+    \bottomrule
+  \end{tabular}
+  \vspace{2mm}
+
+  \small
+  \pozor{Pravidlo:} nevybírá se „lepší`` čip, ale \textbf{nejmenší, který úlohu zvládne}.
+  Rozhoduje spotřeba, napětí periferií, potřebná paměť a cena v sérii.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Kvíz -- co byste vybrali a proč?}
+  \small
+  \begin{enumerate}\itemsep3pt
+    \item Blikající světlo na kolo. Dvě LED, tlačítko, běží z knoflíkové baterie
+          několik měsíců.
+    \item Kamera u vchodu, která posílá snímek do mobilu přes Wi-Fi.
+    \item Regulace otáček motoru s enkodérem, 1000 přepočtů za sekundu s \kod{float}.
+  \end{enumerate}
+
+  \pause
+  \vspace{2mm}
+  \footnotesize
+  \begin{tabular}{@{}p{0.4cm}p{3.2cm}p{6.8cm}@{}}
+    \toprule
+    & Volba & Proč \\
+    \midrule
+    1. & \textbf{AVR} (i menší ATtiny) & úloha je triviální, rozhoduje spotřeba
+         ve spánku a cena \\
+    2. & \textbf{ESP32} & Wi-Fi musí být na čipu; samotné ARM jádro to neřeší \\
+    3. & \textbf{ARM} Cortex-M4F & 1000$\times$ za sekundu \kod{float} 8bitový AVR
+         nestihne \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Pozor na časté záměny}
+  \footnotesize
+  \begin{tabular}{@{}p{4.4cm}p{6.4cm}@{}}
+    \toprule
+    Říká se & Ve skutečnosti \\
+    \midrule
+    „ESP32 je ARM`` & není -- má jádro \textbf{Xtensa} (novější řady i RISC-V) \\
+    \addlinespace
+    „Arduino je procesor`` & Arduino je \textbf{prostředí a knihovny};
+      běží na AVR, ARM i ESP32 \\
+    \addlinespace
+    „Raspberry Pi a Pico je totéž`` & Pi je \textbf{počítač s Linuxem},
+      Pico je \textbf{mikrokontroler} \\
+    \addlinespace
+    „procesor`` $=$ „mikrokontroler`` & mikrokontroler má jádro,
+      paměti \textbf{i periferie} na jednom čipu \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small
+  \pozor{Proč na tom záleží:} podle těchto slov se hledá dokumentace a knihovny.
+  Kdo hledá „ARM knihovnu`` pro ESP32, nenajde nic.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+% REZERVA – když se nestíhá, tento slide vypustit.
+\begin{frame}{Čipy zblízka \small (rezerva)}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \obrazek[\textwidth]{../obrazky/03_cipy_avr_arm}{Fotografie vedle sebe:
+        ATmega328P v patici DIP-28 a čip ARM v pouzdře LQFP, se stejným
+        měřítkem a počtem vývodů}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \obrazek[\textwidth]{../obrazky/04_deska_uno_popis}{Deska Arduino UNO
+        s vyznačenými částmi: ATmega328P, převodník USB-UART, krystal 16 MHz,
+        stabilizátor 5 V, konektor ICSP, tlačítko RESET, LED na pinu 13}
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \footnotesize
+  \pozor{Na co se dívat:} kolik má čip vývodů (tolik nejvýš periferií),
+  v jakém je pouzdře (DIP se dá vyměnit, LQFP už ne) a co všechno je na desce
+  \textbf{kolem} čipu -- napájení, převodník, krystal. Příště si to celé
+  proměříme multimetrem.
+\end{frame}
+
+% ===== KLÍČOVÝ SNÍMEK: shrnutí hodiny ======================================
+\begin{keyframe}{Shrnutí hodiny}
+  \footnotesize
+  \begin{itemize}\itemsep2pt
+    \item \pozor{Platforma} $=$ jádro $+$ čip $+$ deska. Pro každé jádro vzniká jiný
+          výsledný program, protože každé má \textbf{jinou instrukční sadu}.
+    \item Program vzniká \pozor{křížovým překladem} na PC a nahrává se přes
+          \pozor{bootloader} nebo \pozor{ICSP}.
+    \item ATmega328P: 32 kB Flash, \pozor{2 kB SRAM}, 1 kB EEPROM -- a to je všechno.
+    \item AVR: 8 bitů, 5 V, málo paměti, jednoduché a spolehlivé.
+          ARM: 32 bitů, 3,3 V, hodně paměti a periferií, složitější rozběh.
+    \item Vybírá se \pozor{nejmenší čip, který úlohu zvládne}.
+  \end{itemize}
+  \vfill
+  \pozor{Příště:} Arduino IDE, první nahraná skica, vlastní repozitář a první
+  \kod{commit}.
+\end{keyframe}
+
+\end{document}

@@ -1,0 +1,4 @@
+# Výchozí nastavení pro latexmk – XeLaTeX kvůli fontspec a českým znakům.
+$pdf_mode = 5;          # 5 = xelatex
+$xelatex = 'xelatex -synctex=1 -interaction=nonstopmode %O %S';
+$clean_ext = 'nav snm vrb xdv run.xml';

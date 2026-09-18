@@ -74,3 +74,33 @@
 % zobrazuje automaticky v patě každého slidu (\SPSVersionStamp), takže je
 % při promítání hned vidět, jak stará je verze PDF.
 \date{}
+
+% --- obrázky s náhradním rámečkem ------------------------------------------
+% \obrazek[šířka]{cesta bez přípony}{popis, co na obrázku má být}
+%
+% Hledá postupně .pdf, .png a .jpg. Když obrázek ve složce obrazky/ ještě
+% není, vysází se místo něj šedý přerušovaný rámeček s popisem a názvem
+% souboru. Prezentace se tak přeloží i s nedodanými obrázky a v PDF je hned
+% vidět, co kam patří. Po dodání souboru se rámeček sám nahradí obrázkem.
+%
+% Použití v prezentaci v temata/<tema>/prezentace/:
+%   \obrazek{../obrazky/01_deska_uno}{Popis desky UNO s vyznačenými částmi}
+%   \obrazek[0.6\textwidth]{../obrazky/02_cip}{Fotografie ATmega328P}
+\newcommand{\SPSObrazekChybi}[3]{%
+  \begin{tikzpicture}
+    \node[draw=SPSGrey, dashed, thick, fill=SPSLight,
+          inner sep=3mm, rounded corners=2pt,
+          text width=\dimexpr#1-8mm\relax,
+          minimum height=\dimexpr#1*50/100\relax,
+          align=center, font=\scriptsize\color{SPSGrey}]
+      {\textbf{\textcolor{SPSRed}{obrázek k dodání}}\\[1.5mm]
+       #3\\[1.5mm]
+       \texttt{\footnotesize\detokenize{#2}}};
+  \end{tikzpicture}%
+}
+\newcommand{\obrazek}[3][\textwidth]{%
+  \IfFileExists{#2.pdf}{\includegraphics[width=#1,keepaspectratio]{#2.pdf}}{%
+    \IfFileExists{#2.png}{\includegraphics[width=#1,keepaspectratio]{#2.png}}{%
+      \IfFileExists{#2.jpg}{\includegraphics[width=#1,keepaspectratio]{#2.jpg}}{%
+        \SPSObrazekChybi{#1}{#2}{#3}}}}%
+}

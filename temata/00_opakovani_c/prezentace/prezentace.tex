@@ -1,0 +1,961 @@
+% ---------------------------------------------------------------------------
+% Prezentace k tématu 00 – Opakování jazyka C pro mikrokontrolery
+%
+% Vstupní hodina 3. ročníku, celá třída, bez programování na PC.
+% Forma: kvíz. Každá otázka je na samostatném slidu, odpověď se odkryje
+% klávesou dál (\pause). Žáci odpovídají nahlas / zvednutím ruky A-B-C-D.
+%
+% ---------------------------------------------------------------------------
+% JÁDRO (45 min) × ROZŠÍŘENÍ
+% ---------------------------------------------------------------------------
+% Slidy označené v titulku „(rozšíření)`` NEJSOU součástí 45minutového jádra.
+% Dají se bez ztráty souvislosti přeskočit; hodí se, když třída stíhá,
+% na druhou hodinu opakování, nebo jako opora do Moodle.
+%
+% Jádro = 8 kvízů:   1 sizeof(int) · 2 přetečení · 3 unsigned long ·
+%                    5 if (x = 5) · 7 počet iterací · 8 main() ·
+%                    9 předání kopií · 10 meze pole
+% Rozšíření = 3 kvízy: 4 #define × const · 6 chybějící break · 11 bitové operace
+%
+% Časování jádra (45 min):
+%   0-3    slidy 1-2      úvod, pravidla kvízu
+%   3-7    slide 3        rok 2 vs. rok 3 - stejný jazyk, jiný stroj
+%   7-17   kvíz 1-3       datové typy, rozsahy, přetečení
+%   17-25  kvíz 5 + výklad  větvení, relační a logické operátory
+%   25-33  kvíz 7 + výklad  cykly, blokující cyklus jako past
+%   33-38  kvíz 8         program bez konce, co na MCU není
+%   38-43  kvíz 9-10      funkce, pole, rozpočet SRAM
+%   43-45  shrnutí        pět věcí k zapamatování
+%
+% Správné odpovědi:
+%   1-B  2-C  3-C  4-B  5-B  6-B  7-B  8-B  9-B  10-C  11-C
+%
+% Překlad:  latexmk -xelatex prezentace.tex
+% Handout (odpovědi hned viditelné, na tisk): .\nastroje\build_prezentace.ps1 -Handout
+% ---------------------------------------------------------------------------
+\documentclass[12pt,aspectratio=169]{beamer}
+
+\input{../../../spolecne/styl/preambule}
+
+\renewcommand{\SPSCodeSize}{\scriptsize}
+\renewcommand{\headlineA}{Opakování C -- vstupní hodina 3.\,ročníku}
+
+% Nabídka odpovědí -- drží stejnou velikost na všech kvízech.
+\newenvironment{odpovedi}{\footnotesize\begin{itemize}\itemsep1pt}{\end{itemize}}
+% Správná odpověď v nabídce. Na prvním překrytí vypadá jako ostatní možnosti,
+% červeně se zvýrazní teprve s odkrytím odpovědi (\pause). V režimu handout
+% se překrytí slučují, takže v tištěném klíči je zvýrazněná rovnou.
+\newcommand{\spravne}[1]{\alt<1>{#1}{\pozor{#1}}}
+
+% Značka v titulku slidu, který není součástí 45minutového jádra.
+\newcommand{\roz}{ {\normalfont\footnotesize\textcolor{SPSGrey}{(rozšíření)}}}
+
+\title{Opakování jazyka C}
+\subtitle{Co z druhého ročníku využijeme na mikrokontroleru \\ Programování -- 3.\,ročník (Mechatronika)}
+
+\begin{document}
+
+\maketitle
+
+% ---------------------------------------------------------------------------
+\begin{keyframe}{Co dnes zvládneme}
+  \begin{itemize}
+    \item Zopakuji si jazyk C \pozor{z pohledu mikrokontroleru} -- ne všechno, jen to,
+          co bude celý rok potřeba.
+    \item Projdu datové typy, větvení, cykly, funkce a práci s pamětí a u každého
+          si řeknu, \textbf{co platí na Arduinu jinak než na PC}.
+    \item Poznám pět míst, kde se dá na mikrokontroleru snadno „spadnout``.
+  \end{itemize}
+  \vfill
+  \pozor{Jak to bude:} u každé otázky si nejdřív \textbf{tipnete} (A--D, nahlas nebo
+  rukou), pak se odpověď odkryje. Za špatný tip se nic nestane -- právě ty jsou
+  nejužitečnější.
+\end{keyframe}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Druhý ročník vs.\ třetí ročník}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Jazyk zůstává stejný.} Proměnné, \kod{if}, cykly, pole, funkce --- nic
+      z toho se nebude učit znovu.
+
+      \vspace{3mm}
+      \textbf{Mění se stroj, na kterém to běží:}
+      \begin{itemize}
+        \item žádný operační systém
+        \item žádná klávesnice ani obrazovka
+        \item paměť v \pozor{kilobajtech}, ne v gigabajtech
+        \item program \pozor{nikdy neskončí}
+        \item chyba se neohlásí -- deska se „zasekne`` nebo restartuje
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \obrazek[\textwidth]{../obrazky/01_pc_vs_mcu}{Srovnání vedle sebe: notebook
+        (OS, klávesnice, obrazovka, GB RAM) a Arduino UNO (piny, žádný OS, 2 kB SRAM)}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ===========================================================================
+\section{Datové typy a rozsahy}
+
+% --- KVÍZ 1 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 1 -- kolik bajtů má \kod{int}?}
+  Stejný řádek přeložíme jednou pro PC a jednou pro Arduino UNO:
+\begin{lstlisting}[style=arduino_bez_cisel]
+printf("%d", sizeof(int));   // na PC
+Serial.println(sizeof(int)); // na Arduino UNO
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[A)] Obojí vypíše 4 -- \kod{int} je vždycky 4 bajty.
+    \item[B)] PC vypíše 4, Arduino \spravne{2}.
+    \item[C)] PC vypíše 2, Arduino 4.
+    \item[D)] Nelze říct, \kod{sizeof} vrací počet bitů.
+  \end{odpovedi}
+
+  \pause
+  \begin{exampleblock}{B)}
+    \footnotesize Velikost \kod{int} určuje \textbf{překladač pro danou platformu}.
+    Na AVR jsou to 2 bajty, takže \kod{int} umí jen \textbf{--32\,768 až 32\,767}.
+  \end{exampleblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Proto se píší typy s číslem}
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      \begin{tabular}{llr}
+        \toprule
+        Typ & B & Rozsah \\
+        \midrule
+        \kod{uint8\_t}  & 1 & 0 \dots 255 \\
+        \kod{int8\_t}   & 1 & --128 \dots 127 \\
+        \kod{uint16\_t} & 2 & 0 \dots 65\,535 \\
+        \kod{int16\_t}  & 2 & --32\,768 \dots 32\,767 \\
+        \kod{uint32\_t} & 4 & 0 \dots 4\,294\,967\,295 \\
+        \kod{float}     & 4 & \textasciitilde 7 číslic \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{2mm}
+      \scriptsize
+      \kod{byte} $=$ \kod{uint8\_t}, \kod{word} $=$ \kod{uint16\_t}.
+      Arduino názvy, ale radši ty s číslem.
+    \end{column}
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+// nejasne: kolik to ma bitu?
+int pin = 13;
+int cas = 100000;   // preteklo!
+
+// jasne na prvni pohled:
+uint8_t  pin = 13;
+uint32_t cas = 100000;
+\end{lstlisting}
+      \vspace{1mm}
+      \small
+      \pozor{Pravidlo pro celý rok:} číslo pinu a malé počty do \kod{uint8\_t},
+      čas v milisekundách do \kod{uint32\_t}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- KVÍZ 2 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 2 -- co se vypíše?}
+\begin{lstlisting}[style=arduino_bez_cisel]
+uint8_t pocet = 250;
+
+void setup() {
+  Serial.begin(9600);
+  for (uint8_t i = 0; i < 10; i++) {
+    pocet = pocet + 1;   // desetkrat
+  }
+  Serial.println(pocet);
+}
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[] A) 260 \qquad B) 255 \qquad \spravne{C) 4} \qquad D) program zahlásí chybu
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{exampleblock}{C) -- \kod{uint8\_t} po 255 přeteče na nulu}
+    \footnotesize 250 $\to$ 255 $\to$ \textbf{0} $\to$ 1 $\to$ \dots $\to$ 4.
+    Žádné varování -- číslo se „přetočí`` jako počítadlo kilometrů.
+  \end{exampleblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Přetečení si představujte jako ciferník}
+  \begin{columns}[c]
+    \begin{column}{0.40\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.92]
+        \draw[very thick, SPSGrey] (0,0) circle (1.9cm);
+        \foreach \a/\t in {90/0, 45/32, 0/64, -45/96, -90/128, -135/160, 180/192, 135/224}
+          \node[font=\scriptsize, SPSDark] at (\a:2.35cm) {\t};
+        \draw[-Stealth, very thick, SPSRed] (55:1.9cm) arc (55:125:1.9cm);
+        \node[font=\scriptsize\bfseries, SPSRed] at (90:1.3cm) {255\,+\,1\,=\,0};
+        \node[align=center, font=\scriptsize, SPSDark] at (0,-0.2)
+          {\kod{uint8\_t}\\[1mm] 0\,\dots\,255};
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \begin{block}{Kde to letos potkáme}
+        \small
+        \begin{itemize}
+          \item počítadlo stisků tlačítka v \kod{uint8\_t}
+          \item součet hodnot z ADC (0--1023) do \kod{int} -- přeteče po 32 vzorcích
+          \item \kod{millis()} po 49 dnech běhu
+        \end{itemize}
+      \end{block}
+      \small
+      \pozor{Dobrá zpráva:} u typů \kod{unsigned} je přetečení \textbf{definované
+      chování}, ne chyba. V bloku 04 ho využijeme, aby časování fungovalo
+      i přes přetečení \kod{millis()}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- KVÍZ 3 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 3 -- proč \kod{unsigned long}?}
+  Takhle se bude celý rok psát měření času. Proč ne \kod{int}?
+\begin{lstlisting}[style=arduino_bez_cisel]
+unsigned long start = millis();
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[A)] Protože \kod{millis()} vrací desetinné číslo.
+    \item[B)] Protože čas nemůže být negativní, jinak je to jedno.
+    \item[C)] \spravne{Protože \kod{int} (2 bajty) by přetekl už po 32 sekundách.}
+    \item[D)] Protože \kod{unsigned long} je na AVR rychlejší.
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{exampleblock}{C)}
+    \footnotesize Do \kod{int} se vejde 32\,767 ms, tedy \textbf{32 sekund}.
+    Do \kod{unsigned long} 4\,294\,967\,295 ms, tedy \textbf{asi 49 dní}.
+  \end{exampleblock}
+\end{frame}
+
+% --- KVÍZ 4 (rozšíření) ---------------------------------------------------
+\begin{frame}[fragile]{Kvíz 4 -- \kod{\#define} nebo \kod{const}?\roz}
+  Dva způsoby, jak pojmenovat pin. Který je lepší a proč?
+\begin{lstlisting}[style=arduino_bez_cisel]
+#define PIN_LED 13            // varianta A
+const uint8_t PIN_LED = 13;   // varianta B
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[A)] \kod{\#define}, protože nezabírá žádnou paměť.
+    \item[B)] \spravne{\kod{const}, protože má typ a překladač ho zkontroluje.}
+    \item[C)] Je to úplně jedno, oba se přeloží stejně.
+    \item[D)] \kod{const} na mikrokontroleru nefunguje.
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{exampleblock}{B)}
+    \footnotesize \kod{\#define} je jen \textbf{textová náhrada} před překladem,
+    překladač o typu nic neví. \pozor{Proč na tom záleží -- hned na dalším slidu.}
+  \end{exampleblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Bez typu je to jen text\roz}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+#define SOUCET 2+3
+uint8_t x = 10 * SOUCET;   // 23 ?!
+
+// prekladac dosadil text a pocita:
+//   10 * 2+3  ->  (10*2)+3  ->  23
+
+const uint8_t SOUCET = 2+3;
+uint8_t y = 10 * SOUCET;   // 50
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      \kod{\#define} dosadí \textbf{znaky}, ne hodnotu. Priorita operátorů se pak
+      spočítá jinak, než jste mysleli -- a nic to nezahlásí.
+
+      \vspace{2mm}
+      \kod{const} má hodnotu \textbf{i typ}. Překladač ji spočítá jednou a dál
+      s ní zachází jako s číslem.
+
+      \vspace{2mm}
+      \scriptsize
+      \pozor{Druhá nepříjemnost:} v chybovém hlášení po \kod{\#define} uvidíte
+      dosazenou hodnotu, ne jméno konstanty. Chybu pak hledáte podle čísla
+      \kod{13} místo podle \kod{PIN\_LED}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Špatný typ $=$ tiché přetečení\roz}
+  Klasická chyba, kterou letos uvidíme v bloku 07 -- převod z ADC na milivolty:
+\begin{lstlisting}[style=arduino_bez_cisel]
+uint16_t adc = analogRead(A0);   // 0 az 1023
+
+// CHYBA: 1023 * 5000 = 5 115 000 se do 16 bitu nevejde
+uint16_t mV      = adc * 5000 / 1023;
+
+// OPRAVA: prvni cinitel do 32 bitu -> cely vypocet ve 32 bitech
+uint32_t mV_ok   = (uint32_t)adc * 5000 / 1023;
+\end{lstlisting}
+
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      Mezivýsledek \kod{adc * 5000} se počítá v \pozor{16 bitech}, protože oba
+      operandy se vejdou do \kod{int}. Do 16 bitů se vejde 32\,767 --
+      pět milionů tedy přeteče a vyjde nesmysl.
+
+      \vspace{1mm}
+      Přetypování prvního činitele na \kod{uint32\_t} přinutí překladač počítat
+      celý výraz ve 32 bitech.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{alertblock}{Proč je to zákeřné}
+        \scriptsize
+        Program se přeloží, nahraje a běží. Jen čidlo ukazuje divná čísla --
+        a hledá se to hůř než chyba, která rovnou spadne.
+      \end{alertblock}
+      \scriptsize
+      \pozor{Souvislost s kvízem 1:} na 32bitovém ARM by ten samý řádek fungoval.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Co dává kontrola typu překladačem\roz}
+  \footnotesize
+  \begin{tabular}{@{}p{4.1cm}p{3.0cm}p{3.3cm}@{}}
+    \toprule
+    Překladač umí & S \kod{const} (má typ) & S \kod{\#define} (jen text) \\
+    \midrule
+    varovat při zúžení hodnoty & ano & ne \\
+    \addlinespace
+    zvolit šířku výpočtu & podle typu & podle dosazeného textu \\
+    \addlinespace
+    ohlídat záměnu znaku a čísla & ano & ne \\
+    \addlinespace
+    ukázat v chybě jméno & ano & ne, ukáže hodnotu \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small
+  \pozor{Shrnuto:} datový typ není formalita, ale \textbf{informace pro překladač},
+  kolik bitů má na výpočet použít a co je ještě povolené. Kde typ chybí, překladač
+  nemá co kontrolovat -- a chyba se místo hlášení projeví až divným chováním desky.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{K čemu je preprocesor naopak nenahraditelný\roz}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+#define DEBUG    // zakomentovat = vypnout
+
+#ifdef DEBUG
+  #define LOG(x)  Serial.println(x)
+#else
+  #define LOG(x)             // vubec nic
+#endif
+
+void loop() {
+  LOG(adc);   // v ostre verzi zmizi
+}
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{block}{Co tím získám}
+        \footnotesize
+        Ladicí výpisy zapnu a vypnu \textbf{jedním řádkem}. Ve vypnuté verzi
+        se ty řádky \pozor{vůbec nepřeloží} -- nezaberou Flash, nezaberou SRAM
+        a nezdržují.
+      \end{block}
+      \footnotesize
+      \kod{const} tohle nesvede: proměnná vždycky existuje a \kod{if} se vždycky
+      vyhodnocuje \textbf{za běhu}. Makro může expandovat na \textbf{nic}.
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \footnotesize
+  \pozor{Na AVR to není maličkost:} každý ladicí \kod{Serial.println("...")}
+  je řetězec, který zabírá Flash i SRAM. Deset takových a 2 kB jsou pryč.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Další práce pro preprocesor\roz}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize \textbf{Přepnutí podle platformy}
+\begin{lstlisting}[style=arduino_bez_cisel]
+#if defined(__AVR__)
+  const uint8_t PIN_LED = 13;
+#elif defined(ARDUINO_ARCH_RP2040)
+  const uint8_t PIN_LED = 25;
+#endif
+\end{lstlisting}
+      \scriptsize
+      Stejná skica se přeloží pro UNO i pro Pico. Souvisí s tématem 01 --
+      každá platforma má jiná čísla pinů.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize \textbf{Ochrana hlavičkového souboru}
+\begin{lstlisting}[style=arduino_bez_cisel]
+#ifndef MOTOR_H
+#define MOTOR_H
+  // obsah hlavicky
+#endif
+\end{lstlisting}
+      \scriptsize
+      Zabrání tomu, aby se hlavička vložila dvakrát. Bez toho překladač hlásí
+      „redefinition``. Použijeme v bloku 15 u vlastní knihovny.
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \small
+  \pozor{Dělicí čára:} preprocesor rozhoduje, \textbf{které řádky se vůbec
+  přeloží} -- to proměnná nikdy nesvede. Ale \textbf{pojmenovat hodnotu} má
+  \kod{const}, protože u toho chceme typ a kontrolu.
+\end{frame}
+
+% ===========================================================================
+\section{Řídicí struktury}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Větvení -- \kod{if} / \kod{else if} / \kod{else}}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+if (teplota > 30) {
+  zapniVentilator();
+} else if (teplota > 25) {
+  zapniSlabe();
+} else {
+  vypni();
+}
+\end{lstlisting}
+      \scriptsize
+      Podmínky se zkouší \textbf{shora dolů} a provede se \pozor{jen první},
+      která platí. Složené závorky se dají u jednoho příkazu vynechat --
+      \textbf{nedělejte to}, je to zdroj chyb.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      \begin{tabular}{@{}ll@{}}
+        \toprule
+        Relační & Logické \\
+        \midrule
+        \kod{==} rovná se      & \kod{\&\&} a zároveň \\
+        \kod{!=} nerovná se    & \kod{||} nebo \\
+        \kod{<} \kod{>}        & \kod{!} negace \\
+        \kod{<=} \kod{>=}      & \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{2mm}
+      \scriptsize
+      \textbf{Drobnosti, které se hodí:}
+      \kod{i \% 2 == 0} -- sudé číslo; \\
+      \kod{max = (a > b) ? a : b;} -- ternární operátor, zkrácený zápis
+      \kod{if}--\kod{else}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- KVÍZ 5 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 5 -- co se vypíše?}
+\begin{lstlisting}[style=arduino_bez_cisel]
+uint8_t x = 0;
+
+if (x = 5) {
+  Serial.println("ANO");
+}
+Serial.println(x);
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[A)] Nevypíše se nic, \kod{x} je 0.
+    \item[B)] \spravne{Vypíše \kod{ANO} a pak \kod{5}.}
+    \item[C)] Překladač zahlásí chybu.
+    \item[D)] Vypíše \kod{ANO} a pak \kod{0}.
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{alertblock}{B) -- klasická past: \kod{=} není \kod{==}}
+    \footnotesize \kod{x = 5} je \textbf{přiřazení}; jeho výsledek 5 je nenulový,
+    tedy „pravda``. Překladač to nejvýš \textbf{varuje}.
+  \end{alertblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{\kod{switch} -- výběr z výčtu hodnot\roz}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+switch (prikaz) {
+  case 'r':
+    rozsvit();
+    break;
+  case 'z':
+    zhasni();
+    break;
+  default:
+    Serial.println("?");
+}
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Kdy \kod{switch} a kdy \kod{else if}}
+        \scriptsize
+        \kod{switch} -- \textbf{jedna} proměnná, porovnává se s \textbf{konkrétními}
+        hodnotami (znak, číslo režimu). \\[1mm]
+        \kod{else if} -- rozsahy (\kod{> 30}) a složené podmínky.
+      \end{block}
+      \scriptsize
+      \pozor{Pozor:} \kod{switch} umí jen celočíselné typy a \kod{char},
+      ne \kod{float} ani text.
+
+      \vspace{1mm}
+      \pozor{Kam to povede:} v bloku 05 z toho bude \textbf{stavový automat} --
+      \kod{switch} nad proměnnou \kod{stav}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- KVÍZ 6 (rozšíření) ---------------------------------------------------
+\begin{frame}[fragile]{Kvíz 6 -- co se vypíše?\roz}
+\begin{lstlisting}[style=arduino_bez_cisel]
+uint8_t rezim = 1;
+
+switch (rezim) {
+  case 1: Serial.println("JEDEN");
+  case 2: Serial.println("DVA"); break;
+  case 3: Serial.println("TRI"); break;
+}
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[] A) \kod{JEDEN} \quad \spravne{B) \kod{JEDEN} a \kod{DVA}}
+            \quad C) všechny tři \quad D) chyba překladu
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{alertblock}{B) -- u \kod{case 1} chybí \kod{break}}
+    \footnotesize Bez \kod{break} program \textbf{propadne} do dalšího \kod{case}
+    a pokračuje, dokud na nějaký \kod{break} nenarazí.
+  \end{alertblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Cykly -- tři tvary, jeden účel}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+// znam pocet opakovani
+for (uint8_t i = 0; i < 8; i++) {
+  digitalWrite(i, HIGH);
+}
+
+// dokud plati podminka
+while (mereni < 10) { ... }
+
+// alespon jeden prubeh
+do { ... } while (mereni < 10);
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      \begin{tabular}{@{}p{1.5cm}p{2.9cm}@{}}
+        \toprule
+        Cyklus & Kdy ho použít \\
+        \midrule
+        \kod{for}      & počet opakování znám dopředu \\
+        \kod{while}    & nevím; nemusí se provést ani jednou \\
+        \kod{do-while} & provede se vždy aspoň jednou \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{2mm}
+      \scriptsize
+      \pozor{Na Arduinu navíc:} \kod{loop()} je sám \textbf{nekonečný cyklus}.
+      Vnější \kod{while (1)} už tedy psát nemusíte -- máte ho zdarma.
+      \kod{break} cyklus ukončí, \kod{continue} přeskočí na další průběh.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- KVÍZ 7 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 7 -- kolik řádků se vypíše?}
+\begin{lstlisting}[style=arduino_bez_cisel]
+for (uint8_t i = 1; i <= 8; i = i + 2) {
+  Serial.println(i);
+}
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[] A) 3 \qquad \spravne{B) 4} \qquad C) 8 \qquad D) nekonečně mnoho
+  \end{odpovedi}
+
+  \pause
+  \vspace{-1mm}
+  \begin{exampleblock}{B) -- vypíše se 1, 3, 5, 7}
+    \footnotesize Krok není \kod{i++}, ale \kod{i = i + 2}. Při \kod{i = 9}
+    podmínka \kod{i <= 8} přestane platit a cyklus skončí.
+  \end{exampleblock}
+  \vspace{-1mm}
+  \footnotesize
+  \pozor{Tři věci, na které se u cyklu vždycky podívat:} odkud se počítá (\kod{i = 0}
+  nebo \kod{1}), jaká je podmínka (\kod{<} nebo \kod{<=}) a jaký je krok.
+  Chyba v kterékoliv z nich je „o jedno vedle``.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Na mikrokontroleru je čekání v cyklu past}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+// PAST: dokud se drzi tlacitko,
+// deska nedela NIC jineho
+while (digitalRead(PIN_TL) == LOW) {
+  // cekame...
+}
+
+// PAST: totez, jen jinak napsane
+delay(2000);
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      Na PC je čekání v cyklu neškodné -- operační systém mezitím obsluhuje
+      všechno ostatní.
+
+      \vspace{2mm}
+      Na mikrokontroleru \pozor{není nikdo, kdo by to udělal za vás}. Když program
+      čeká, deska nečte ostatní tlačítka, nepřepíná LED a nekomunikuje.
+
+      \vspace{2mm}
+      \scriptsize
+      \pozor{Kam to povede:} od bloku 04 je \kod{delay()} v zadáních
+      \textbf{zakázaný}. Místo čekání se v \kod{loop()} jen podíváme, kolik je
+      \kod{millis()}, a hned se vrátíme.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ===========================================================================
+\section{Program bez konce a výstup}
+
+% --- KVÍZ 8 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 8 -- kde je v Arduinu \kod{main()}?}
+  Na PC program skončí, když \kod{main()} dojde k \kod{return 0;}. Co dělá Arduino?
+
+  \begin{odpovedi}
+    \item[A)] \kod{main()} tam není, Arduino žádný nemá.
+    \item[B)] \spravne{\kod{main()} tam je, jen ho nevidíme -- volá \kod{setup()}
+      a pak \kod{loop()} v nekonečném cyklu.}
+    \item[C)] \kod{setup()} a \kod{loop()} se volají střídavě po každé instrukci.
+    \item[D)] \kod{loop()} se zavolá jen tehdy, když se něco změní na pinu.
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+\begin{lstlisting}[style=arduino_bez_cisel]
+int main(void) {   // tohle za nas doplni Arduino
+  init(); setup();          // probehne jednou
+  for (;;) { loop(); }      // pusti se porad znovu
+}
+\end{lstlisting}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Důsledek: \kod{loop()} běží tisíce krát za sekundu}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \begin{tabular}{ll}
+        \toprule
+        Na PC & Na Arduinu \\
+        \midrule
+        \kod{printf()}   & \kod{Serial.print()} \\
+        \kod{scanf()}    & \kod{Serial.read()} (jinak!) \\
+        \kod{malloc()}   & nepoužíváme \\
+        \kod{exit()}     & není kam skončit \\
+        soubory          & nejsou (bez SD karty) \\
+        výjimka, chyba   & reset nebo zamrznutí \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{2mm}
+      \small
+      \pozor{Hlavní past roku:} \kod{delay(1000)} znamená, že deska celou sekundu
+      \textbf{nedělá nic jiného}.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \obrazek[\textwidth]{../obrazky/02_konzole_vs_serial}{Vedle sebe: konzole
+        OnlineGDB s výstupem \kod{printf} a sériový monitor Arduino IDE
+        s výstupem \kod{Serial.println} -- screenshot}
+
+      \vspace{1mm}
+      \scriptsize
+      \kod{Serial.read()} \textbf{nečeká}, až něco napíšete. Vrátí to, co už přišlo,
+      nebo \kod{-1}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Z \kod{printf} na \kod{Serial.print}\roz}
+  \begin{columns}[T]
+    \begin{column}{0.62\textwidth}
+      \scriptsize
+      % Pozor: \kod vynucuje \small, v malé tabulce by přetékal -> \texttt.
+      \begin{tabular}{@{}p{3.1cm}p{3.5cm}@{}}
+        \toprule
+        Na PC & Na Arduinu \\
+        \midrule
+        \texttt{printf("\%d\textbackslash n", x)} & \texttt{Serial.println(x)} \\
+        \texttt{printf("\%c", z)}    & \texttt{Serial.print(z)} \\
+        \texttt{printf("\%s", t)}    & \texttt{Serial.print(t)} \\
+        \texttt{printf("\%.2f", f)}  & \texttt{Serial.print(f, 2)} \\
+        \texttt{printf("\%x", x)}    & \texttt{Serial.print(x, HEX)} \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.35\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+// printf("a=%d b=%d\n", a, b);
+Serial.print("a=");
+Serial.print(a);
+Serial.print(" b=");
+Serial.println(b);
+\end{lstlisting}
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  \footnotesize
+  \pozor{Tři věci, které se pokaždé zapomenou:} \kod{Serial.begin(9600)} v \kod{setup()};
+  stejná rychlost nastavená i v sériovém monitoru; a \kod{println} místo \kod{print},
+  jinak se celý výstup slije na jeden řádek.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Lokální a globální proměnná\roz}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[style=arduino_bez_cisel]
+uint8_t pocet = 0;    // globalni
+
+void loop() {
+  uint8_t docasna = 0;  // lokalni
+  pocet = pocet + 1;    // pamatuje si
+  docasna = docasna + 1;// vzdy 1
+}
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      Lokální proměnná při každém průběhu \kod{loop()} \pozor{vznikne znovu od nuly}.
+      Globální si hodnotu pamatuje.
+
+      \vspace{2mm}
+      Na PC se globální proměnné nedoporučují. \textbf{Na mikrokontroleru jsou
+      běžné a v pořádku} -- stav zařízení musí přežít mezi průběhy \kod{loop()}.
+
+      \vspace{2mm}
+      \scriptsize
+      \pozor{Kam to povede:} v bloku 03 se naučíme \kod{static} -- lokální proměnnou,
+      která si hodnotu pamatuje, ale nikdo jiný do ní nevidí.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ===========================================================================
+\section{Funkce, pole a paměť}
+
+% --- KVÍZ 9 ---------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 9 -- co se vypíše?}
+\begin{lstlisting}[style=arduino_bez_cisel]
+void zdvojnasob(int cislo) {
+  cislo = cislo * 2;
+}
+
+void setup() {
+  int a = 5;
+  zdvojnasob(a);
+  Serial.println(a);   // co se vypise?
+}
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[] A) 10 \qquad \spravne{B) 5} \qquad C) 0 \qquad D) nepřeloží se
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{exampleblock}{B) -- parametr se předává \textbf{kopií}}
+    \footnotesize Funkce zdvojnásobila kopii a kopie zanikla. Kdo chce změnit
+    proměnnou volajícího, musí ji \kod{return}nout, nebo poslat \pozor{ukazatel} (blok 06).
+  \end{exampleblock}
+\end{frame}
+
+% --- KVÍZ 10 --------------------------------------------------------------
+\begin{frame}[fragile]{Kvíz 10 -- co se stane na Arduinu?}
+\begin{lstlisting}[style=arduino_bez_cisel]
+int hodnoty[5];
+
+for (uint8_t i = 0; i <= 5; i++) {   // pozor na <=
+  hodnoty[i] = analogRead(A0);
+}
+\end{lstlisting}
+
+  \begin{odpovedi}
+    \item[A)] Překladač zahlásí „index out of range``.
+    \item[B)] Program spadne s chybovým hlášením v sériovém monitoru.
+    \item[C)] \spravne{Přepíše se cizí paměť -- program se chová divně nebo se deska resetuje.}
+    \item[D)] Nic, poslední hodnota se zahodí.
+  \end{odpovedi}
+
+  \pause
+  \vspace{-1mm}
+  \begin{center}
+    \begin{tikzpicture}[scale=0.8, every node/.style={font=\scriptsize}]
+      \foreach \i in {0,...,4} {
+        \draw[thick, SPSDark, fill=SPSLight] (\i*1.0,0) rectangle ++(0.95,0.6);
+        \node at (\i*1.0+0.475,0.3) {\i};
+      }
+      \draw[thick, SPSRed, dashed, fill=SPSRed!10] (5.0,0) rectangle ++(0.95,0.6);
+      \node[SPSRed] at (5.475,0.3) {5};
+      \node[SPSRed, anchor=west] at (6.1,0.3) {$\leftarrow$ tady už je \textbf{jiná proměnná}};
+      \node[SPSGrey, anchor=west, font=\tiny] at (0,-0.45)
+        {\kod{int hodnoty[5]} v SRAM -- C meze pole nekontroluje};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Rozpočet na 2 kB SRAM}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      ATmega328P má \pozor{2048 bajtů} SRAM -- a v nich musí být \textbf{všechny}
+      proměnné, pole i zásobník volání funkcí.
+
+      \vspace{2mm}
+      \footnotesize
+      \begin{tabular}{lr}
+        \toprule
+        Co & Zabere \\
+        \midrule
+        \kod{uint8\_t stav;}     & 1 B \\
+        \kod{int hodnoty[100];}  & 200 B \\
+        \kod{float mereni[100];} & 400 B \\
+        \kod{char text[200];}    & 200 B \\
+        \kod{Serial} (buffery)   & \textasciitilde 180 B \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{alertblock}{Typický zážitek}
+        \small Program se přeloží a nahraje, ale deska se restartuje nebo píše nesmysly.
+        Příčina: SRAM je plná a zásobník přepsal proměnné.
+      \end{alertblock}
+      \begin{exampleblock}{Jak to poznat}
+        \small Překladač to napíše sám: \\
+        \kod{\scriptsize Global variables use 1834 bytes (89\%)}. \\
+        Nad 75\,\% je čas ubrat.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- KVÍZ 11 (rozšíření) --------------------------------------------------
+\begin{frame}[fragile]{Kvíz 11 -- bitové operace\roz}
+  Co vyjde? \qquad \kod{uint8\_t x = 1 << 3;}
+
+  \begin{odpovedi}
+    \item[] A) 3 \qquad B) 4 \qquad \spravne{C) 8} \qquad D) 13
+  \end{odpovedi}
+
+  \pause
+  \vspace{-2mm}
+  \begin{exampleblock}{C) -- posun o 3 bity vlevo}
+    \footnotesize \kod{0b00000001} $\to$ \kod{0b00001000} $=$ 8. Posun vlevo
+    o 1 bit je násobení dvěma.
+  \end{exampleblock}
+  \vspace{-1mm}
+  \footnotesize
+  \begin{tabular}{lll}
+    \toprule
+    Operace & Co dělá & K čemu letos \\
+    \midrule
+    % Pozor: ?`` je v TeXu ligatura pro ¿ -- {} ji rozdělí.
+    \kod{a \& b}          & AND         & „je tenhle bit nastavený?{}`` \\
+    \kod{a | b}           & OR          & „nastav bit`` \\
+    \kod{a \^{} b}          & XOR         & „překlop bit`` (blikání LED) \\
+    \kod{\textasciitilde a} & negace      & inverze všech bitů \\
+    \kod{1 << n}          & posun vlevo & maska pro $n$-tý pin \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Když překladač zahlásí chybu\roz}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \obrazek[\textwidth]{../obrazky/03_chyba_prekladace}{Screenshot Arduino IDE
+        s chybovým hlášením překladače -- vyznačit číslo řádku a text chyby}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Postup, který platí celý rok}
+        \footnotesize
+        \begin{enumerate}\itemsep1pt
+          \item Přečti \pozor{první} chybu, ne poslední.
+          \item Najdi \textbf{číslo řádku} -- chyba je na něm nebo o řádek výš.
+          \item Nejčastější tři: chybějící \kod{;}, chybějící \kod{\}},
+                nedeklarovaná proměnná.
+          \item Oprav jednu věc a přelož znovu.
+        \end{enumerate}
+      \end{block}
+      \footnotesize
+      \pozor{Pozor:} „error`` znamená, že se nic nenahrálo -- na desce běží pořád
+      \textbf{starý} program. To mate.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{keyframe}{Šest věcí k zapamatování}
+  \footnotesize
+  \begin{enumerate}\itemsep1pt
+    \item \kod{int} má na AVR \pozor{2 bajty}. Pište \kod{uint8\_t}, \kod{int16\_t},
+          \kod{uint32\_t} -- je hned vidět, co se vejde.
+    \item Typy \kod{unsigned} \pozor{přetékají} bez varování. Čas vždycky
+          do \kod{unsigned long}.
+    \item \pozor{\kod{=} není \kod{==}} a u \kod{case} nesmí chybět \kod{break}.
+          Obojí se přeloží a chová se divně.
+    \item Program \pozor{nikdy neskončí}. \kod{setup()} jednou, \kod{loop()} pořád
+          dokola -- a \pozor{čekání v cyklu} zastaví celou desku.
+    \item C \pozor{nekontroluje meze pole} a SRAM má jen 2 kB. Za koncem pole
+          je cizí proměnná.
+    \item Parametr funkce se předává \pozor{kopií}.
+  \end{enumerate}
+  \vfill
+  \pozor{Hned po přestávce:} na jakém stroji to vlastně běží -- hardwarové platformy,
+  AVR a ARM.
+\end{keyframe}
+
+\end{document}

@@ -83,7 +83,7 @@
 
 \setbeamersize{text margin left=2em,text margin right=1.5em}
 \usefonttheme[onlymath]{serif}
-\setbeamerfont{frametitle}{size=\LARGE,series=\bfseries}
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
 \setbeamerfont{footline}{size=\fontsize{9}{11}\selectfont}
 \setbeamerfont{headline}{size=\fontsize{9}{11}\selectfont}
 \useinnertheme{rectangles}
@@ -220,11 +220,16 @@
 \providecommand{\headlineA}{}
 \providecommand{\headlineB}{}
 \providecommand{\headlineC}{}
+% Na titulnim slidu (framenumber = 1) se text zahlavi nesazi -- kolidoval by
+% s bilym logem v levem hornim rohu. Prazdny box se ale zachova, aby zustala
+% stejna vyska a titul se neposunul nahoru.
 \setbeamertemplate{headline}{%
   \vspace{0.1cm}
   \hbox{%
     \begin{beamercolorbox}[wd=0.72\paperwidth,ht=0.55cm,left,leftskip=2em]{headline}%
-      \headlineA\par\headlineB\par\headlineC
+      \ifnum\c@framenumber=1\relax\else
+        \headlineA\par\headlineB\par\headlineC
+      \fi
     \end{beamercolorbox}%
   }
 }
