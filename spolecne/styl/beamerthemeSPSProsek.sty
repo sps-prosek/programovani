@@ -1,0 +1,352 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerthemeSPSProsek}[2026/09/18 Beamer motiv SPS na Proseku]
+
+% ---------------------------------------------------------------------------
+% Motiv prezentaci pro SPS na Proseku (predmet Programovani, 3. rocnik).
+%
+% Vychazi z motivu beamerthemeCVUT.sty pouzivaneho v predmetech ZPG a SNT
+% na FS CVUT (repozitar software-tools-for-technical-calculations,
+% utils/presentation-template). Zachovava stejne rozvrzeni -- 16:9, paticka
+% s verzi a cislem slidu, prostredi keyframe, sloty headlineA/B/C -- a meni
+% znacku a barvy na SPS na Proseku. Navic pridava sazbu zdrojoveho kodu
+% v C / Arduino (balicek listings), protoze v tomto predmetu je kodu hodne.
+%
+% Nacita se z spolecne/styl/preambule.tex, ktery nastavi \SPSStylPath.
+% Nevyzaduje sitove zdroje. Funguje s XeLaTeXem (vychozi toolchain
+% repozitare, viz nastroje/build_prezentace.ps1) i s pdfLaTeXem.
+% ---------------------------------------------------------------------------
+
+\RequirePackage{iftex}
+\RequirePackage{setspace}
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\RequirePackage{listings}
+
+\makeatletter
+\mode<presentation>
+
+% Cestu ke slozce se stylem a logy musi dokument definovat pred nactenim
+% baliku, napriklad:  \newcommand{\SPSStylPath}{../../../spolecne/styl}
+\providecommand{\SPSStylPath}{.}
+
+% --- Verze prezentace: datum a cas posledniho prekladu ---------------------
+% Pouziva jen primitiva prosteho TeXu (\day, \month, \year, \time), takze
+% funguje bez dalsich balicku a stejne v XeLaTeXu i pdfLaTeXu. Diky tomu je
+% na kazdem slidu videt, jak stare je promitane PDF.
+\newcount\SPS@hh
+\newcount\SPS@mm
+\newcount\SPS@tmp
+\SPS@hh=\time
+\divide\SPS@hh by 60
+\SPS@tmp=\SPS@hh
+\multiply\SPS@tmp by 60
+\SPS@mm=\time
+\advance\SPS@mm by -\SPS@tmp
+\def\SPS@twodigit#1{\ifnum#1<10 0\fi\number#1}
+\def\SPSCompileDate{\number\day.\,\number\month.\,\number\year}
+\def\SPSCompileTime{\SPS@twodigit{\SPS@hh}:\SPS@twodigit{\SPS@mm}}
+% Text v pate kazdeho slidu (vcetne titulniho). Lze prepsat pred
+% \begin{document}:  \renewcommand{\SPSVersionStamp}{...}
+\providecommand{\SPSVersionStamp}{Verze: \SPSCompileDate, \SPSCompileTime}
+\setbeamerfont{SPSversion}{size=\tiny}
+\setbeamercolor{SPSversion}{fg=gray}
+
+% --- Barvy -----------------------------------------------------------------
+% Odvozene primo z oficialniho loga skoly (github.com/sps-prosek/sps-prosek-logo).
+\definecolor{SPSGrey}{HTML}{8E9194}       % seda ze znaku "SPS"
+\definecolor{SPSRed}{HTML}{ED1C24}        % cervena z pismene "P"
+\definecolor{SPSDark}{HTML}{231F20}       % tmava z tmave varianty loga
+\definecolor{SPSAnthracite}{HTML}{393536} % tmava seda z napisu "na Proseku"
+\definecolor{SPSLight}{HTML}{F2F2F2}      % svetle pozadi bloku
+
+% Ceska jmena barev pouzivana v drivejsi preambuli repozitare -- zustavaji
+% platna, aby uz napsane slidy sly prelozit beze zmeny.
+\colorlet{skolaModra}{SPSDark}
+\colorlet{skolaSeda}{SPSGrey}
+\colorlet{akcent}{SPSRed}
+
+\setbeamercolor{structure}{fg=SPSAnthracite}
+\setbeamercolor{frametitle}{fg=SPSDark,bg=}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{itemize item}{fg=SPSRed}
+\setbeamercolor{itemize subitem}{fg=SPSGrey}
+\setbeamercolor{itemize subsubitem}{fg=SPSGrey}
+\setbeamercolor{enumerate item}{fg=SPSRed}
+\setbeamercolor{alerted text}{fg=SPSRed}
+\setbeamercolor{block title}{fg=white,bg=SPSAnthracite}
+\setbeamercolor{block body}{fg=SPSDark,bg=SPSLight}
+\setbeamercolor{block title alerted}{fg=white,bg=SPSRed}
+\setbeamercolor{block body alerted}{fg=SPSDark,bg=SPSRed!8}
+\setbeamercolor{block title example}{fg=white,bg=SPSGrey}
+\setbeamercolor{block body example}{fg=SPSDark,bg=SPSGrey!12}
+\setbeamercolor{headline}{fg=SPSAnthracite}
+
+\setbeamersize{text margin left=2em,text margin right=1.5em}
+\usefonttheme[onlymath]{serif}
+\setbeamerfont{frametitle}{size=\LARGE,series=\bfseries}
+\setbeamerfont{footline}{size=\fontsize{9}{11}\selectfont}
+\setbeamerfont{headline}{size=\fontsize{9}{11}\selectfont}
+\useinnertheme{rectangles}
+
+% --- Rozmery znacky --------------------------------------------------------
+% Logo ma byt pritomne, ale nema ukrajovat misto obsahu (typicky dlouhym
+% vypisum kodu). Obe hodnoty lze prepsat pres \renewcommand pred
+% \begin{document}.
+\providecommand{\SPSLogoWidth}{0.19\paperwidth}      % logo na beznem slidu
+\providecommand{\SPSTitleLogoWidth}{0.30\paperwidth} % logo na titulnim slidu
+
+% --- Pozadi ----------------------------------------------------------------
+% Titulni slide: tmave pozadi, bile logo vlevo nahore, jemny vodoznak znaku
+% vpravo dole. Ostatni slidy: ciste bile pozadi a male barevne logo v pravem
+% hornim rohu, aby zbylo co nejvic mista na kod.
+\setbeamertemplate{background canvas}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \ifnum\c@framenumber=1
+      \fill[SPSDark] (current page.north west) rectangle (current page.south east);
+      \node[anchor=south east,inner sep=0]
+        at ([xshift=-0.045\paperwidth,yshift=0.10\paperheight]current page.south east)
+        {\includegraphics[width=0.24\paperwidth,keepaspectratio]%
+          {\SPSStylPath/loga/logo-znak-vodoznak.pdf}};
+      \node[anchor=north west,inner sep=0]
+        at ([xshift=0.055\paperwidth,yshift=-0.085\paperheight]current page.north west)
+        {\includegraphics[width=\SPSTitleLogoWidth,keepaspectratio]%
+          {\SPSStylPath/loga/logo-s-nazvem-bile.pdf}};
+    \else
+      \fill[white] (current page.north west) rectangle (current page.south east);
+      \node[anchor=north east,inner sep=0]
+        at ([xshift=-0.028\paperwidth,yshift=-0.055\paperheight]current page.north east)
+        {\includegraphics[width=\SPSLogoWidth,keepaspectratio]%
+          {\SPSStylPath/loga/logo-s-nazvem-barevne.pdf}};
+    \fi
+  \end{tikzpicture}%
+}
+
+% --- Titulni slide ---------------------------------------------------------
+\defbeamertemplate*{title page}{SPSTitle}{
+  \vspace{0.16\paperheight}%
+  {\color{white}\setstretch{1.0}\LARGE\bfseries\inserttitle\par}
+  \vspace{0.25cm}%
+  {\color{SPSRed}\rule{0.30\paperwidth}{2pt}\par}
+  \ifx\insertsubtitle\@empty\else
+    \vspace{0.35cm}{\color{white}\insertsubtitle\par}
+  \fi
+  \ifx\insertauthor\@empty\else
+    \vspace{0.75cm}{\color{white}\insertauthor\par}
+  \fi
+  \ifx\insertinstitute\@empty\else
+    \vspace{0.1cm}{\color{white}\small\insertinstitute\par}
+  \fi
+  \ifx\insertdate\@empty\else
+    \vspace{0.1cm}{\color{white}\small\insertdate\par}
+  \fi
+  \vfill
+}
+
+% --- Titulek slidu ---------------------------------------------------------
+\setbeamertemplate{frametitle}{%
+  \vspace{0.30cm}%
+  \usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}%
+  \insertframetitle\par
+  \ifx\insertframesubtitle\@empty\else
+    {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}%
+      \insertframesubtitle\par}%
+  \fi
+  \vspace{0.10cm}%
+}
+
+% --- Paticka ---------------------------------------------------------------
+% Verze (datum a cas prekladu) vlevo, cislo slidu vpravo. Zapina se v
+% preambuli pomoci \setbeamertemplate{footline}[SPSProsek].
+\defbeamertemplate*{footline}{SPSProsek}{%
+  \hbox to \paperwidth{%
+    \hspace{1em}%
+    {\usebeamerfont{SPSversion}\usebeamercolor[fg]{SPSversion}\SPSVersionStamp}%
+    \hfill%
+    {\usebeamercolor[fg]{page number in head/foot}\usebeamerfont{page number in head/foot}%
+      \insertframenumber\,/\,\inserttotalframenumber}%
+    \kern1em%
+  }%
+  \vskip2pt%
+}
+
+% --- Predelovy slide sekce -------------------------------------------------
+% Beamer sam o sobe pri \section nic nevykresli. Tenhle slide oddeluje casti
+% hodiny (Teorie / Kod / Uloha). Vypnout ho lze prikazem
+% \SPSSectionSlidesOff v preambuli konkretni prezentace.
+\newif\ifSPS@sectionslides
+\SPS@sectionslidestrue
+\newcommand{\SPSSectionSlidesOff}{\SPS@sectionslidesfalse}
+\AtBeginSection[]{%
+  \ifSPS@sectionslides
+    \begin{frame}[plain,noframenumbering]
+      \vfill
+      {\color{SPSRed}\rule{0.18\paperwidth}{2pt}\par}
+      \vspace{0.35cm}
+      {\usebeamerfont{frametitle}\color{SPSDark}\insertsectionhead\par}
+      \vfill
+    \end{frame}
+  \fi
+}
+
+% --- "Klicove" slidy (cile, shrnuti) ---------------------------------------
+% Pro typy slidu, ktere se opakuji v kazde hodine a maji byt na prvni pohled
+% rozpoznatelne ("Co dnes zvladneme", "Shrnuti"), pouzijte misto
+% \begin{frame}{Titulek} prostredi \begin{keyframe}{Titulek}. Slide dostane
+% tenky cerveny pruh na levem okraji.
+\newenvironment{keyframe}[1]{%
+  \begin{frame}{#1}%
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[SPSRed] ([yshift=0.1\paperheight]current page.south west) rectangle
+      ([xshift=0.15cm,yshift=.80\paperheight]current page.south west);
+  \end{tikzpicture}%
+}{%
+  \end{frame}%
+}
+
+% Totez pro slide s vypisem kodu -- frame je [fragile], takze uvnitr funguje
+% prostredi lstlisting.
+\newenvironment{keyframefragile}[1]{%
+  \begin{frame}[fragile]{#1}%
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[SPSRed] ([yshift=0.1\paperheight]current page.south west) rectangle
+      ([xshift=0.15cm,yshift=.80\paperheight]current page.south west);
+  \end{tikzpicture}%
+}{%
+  \end{frame}%
+}
+
+% --- Horni lista (volitelna, vychozi prazdna) ------------------------------
+% \renewcommand{\headlineA}{Tema 3 -- Digitalni vstupy}
+\providecommand{\headlineA}{}
+\providecommand{\headlineB}{}
+\providecommand{\headlineC}{}
+\setbeamertemplate{headline}{%
+  \vspace{0.1cm}
+  \hbox{%
+    \begin{beamercolorbox}[wd=0.72\paperwidth,ht=0.55cm,left,leftskip=2em]{headline}%
+      \headlineA\par\headlineB\par\headlineC
+    \end{beamercolorbox}%
+  }
+}
+
+% ===========================================================================
+% Sazba zdrojoveho kodu v C / Arduino (balicek listings)
+% ===========================================================================
+% Velikost pisma kodu je zamerne vytazena do samostatneho makra, aby sla
+% zmenit jednim radkem -- globalne v preambuli, nebo jen v jedne prezentaci:
+%   \renewcommand{\SPSCodeSize}{\scriptsize}
+\providecommand{\SPSCodeSize}{\footnotesize}
+
+\definecolor{kodKlicove}{HTML}{0B5FA5}   % klicova slova jazyka C
+\definecolor{kodArduino}{HTML}{00838F}   % funkce a konstanty Arduina
+\definecolor{kodKomentar}{HTML}{5F785F}  % komentare
+\definecolor{kodRetezec}{HTML}{B34700}   % retezce a znaky
+\definecolor{kodPozadi}{HTML}{F7F7F5}    % pozadi vypisu
+\definecolor{kodRamecek}{HTML}{D8D8D4}   % ramecek vypisu
+
+% Jazyk "Arduino": C++ rozsirene o jadro Arduina (funkce, konstanty, typy,
+% bezne knihovny). Pouziti:  \begin{lstlisting}[language=Arduino]
+% Vychozi styl "arduino" ho nastavuje sam, explicitne ho tedy uvadet netreba.
+\lstdefinelanguage{Arduino}[ANSI]{C++}{
+  morekeywords={
+    setup,loop,
+    pinMode,digitalWrite,digitalRead,analogRead,analogWrite,analogReference,
+    delay,delayMicroseconds,millis,micros,
+    attachInterrupt,detachInterrupt,digitalPinToInterrupt,interrupts,noInterrupts,
+    tone,noTone,pulseIn,shiftIn,shiftOut,map,constrain,
+    Serial,Serial1,Wire,SPI,EEPROM,
+    begin,end,available,read,write,print,println,readString,readStringUntil,
+    parseInt,parseFloat,flush,setTimeout,
+    Servo,attach,detach,writeMicroseconds,
+    LiquidCrystal,LiquidCrystal_I2C,setCursor,clear,backlight,createChar,
+    String,byte,boolean,word,volatile,
+    uint8_t,uint16_t,uint32_t,int8_t,int16_t,int32_t,bool,size_t,
+    HIGH,LOW,INPUT,OUTPUT,INPUT_PULLUP,
+    LED_BUILTIN,A0,A1,A2,A3,A4,A5,
+    RISING,FALLING,CHANGE,
+    PI,HALF_PI,TWO_PI,DEG_TO_RAD,RAD_TO_DEG,
+    true,false
+  },
+  sensitive=true,
+}
+
+% Ceske znaky ve vypisech (typicky v komentarich). XeLaTeX zvlada UTF-8 sam,
+% pdfLaTeX potrebuje seznam nahrad -- jinak u diakritiky uvnitr lstlisting
+% hlasi chybu nebo znak vynecha.
+\lstset{extendedchars=true}
+\ifPDFTeX
+  \lstset{
+    inputencoding=utf8,
+    literate=%
+      {á}{{\'a}}1 {č}{{\v c}}1 {ď}{{\v d}}1 {é}{{\'e}}1 {ě}{{\v e}}1
+      {í}{{\'i}}1 {ň}{{\v n}}1 {ó}{{\'o}}1 {ř}{{\v r}}1 {š}{{\v s}}1
+      {ť}{{\v t}}1 {ú}{{\'u}}1 {ů}{{\r u}}1 {ý}{{\'y}}1 {ž}{{\v z}}1
+      {Á}{{\'A}}1 {Č}{{\v C}}1 {Ď}{{\v D}}1 {É}{{\'E}}1 {Ě}{{\v E}}1
+      {Í}{{\'I}}1 {Ň}{{\v N}}1 {Ó}{{\'O}}1 {Ř}{{\v R}}1 {Š}{{\v S}}1
+      {Ť}{{\v T}}1 {Ú}{{\'U}}1 {Ů}{{\r U}}1 {Ý}{{\'Y}}1 {Ž}{{\v Z}}1
+      {°}{{\textdegree}}1 {–}{{--}}1
+  }
+\fi
+
+% Vychozi styl vypisu. Jmeno "arduino" je zamerne stejne jako v drivejsi
+% preambuli repozitare, aby uz napsane slidy fungovaly beze zmeny.
+\lstdefinestyle{arduino}{
+  language=Arduino,
+  basicstyle=\SPSCodeSize\ttfamily,
+  keywordstyle=\color{kodKlicove}\bfseries,
+  commentstyle=\color{kodKomentar}\itshape,
+  stringstyle=\color{kodRetezec},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  tabsize=2,
+  breaklines=true,
+  breakatwhitespace=false,
+  breakindent=1.5em,
+  % Pozor: barevny prikaz (\color, \textcolor) uvnitr postbreak se v Beameru
+  % rozbije chybou "Missing number, treated as zero" -- sipka proto barvu nema.
+  postbreak=\mbox{$\hookrightarrow$\space},
+  numbers=left,
+  numberstyle=\ttfamily\scriptsize\color{SPSGrey},
+  numbersep=8pt,
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{kodRamecek},
+  backgroundcolor=\color{kodPozadi},
+  xleftmargin=14pt,
+  xrightmargin=0pt,
+  aboveskip=0.6em,
+  belowskip=0.4em,
+  % Zvyrazneni useku primo ve vypisu: obalte ho do (*@\zvyrazni{...}@*)
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=arduino}
+
+% Kratke ukazky, u kterych cislovani radku jen rusi.
+\lstdefinestyle{arduino_bez_cisel}{style=arduino,numbers=none,xleftmargin=0pt}
+
+% Vypis vystupu programu (seriovy monitor) -- bez zvyrazneni syntaxe.
+\lstdefinestyle{vystup}{
+  basicstyle=\SPSCodeSize\ttfamily\color{SPSDark},
+  language={},
+  numbers=none,
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{kodRamecek},
+  backgroundcolor=\color{SPSLight},
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  breaklines=true,
+  xleftmargin=0pt,
+  aboveskip=0.6em,
+  belowskip=0.4em,
+}
+% Pouziti:  \begin{vystup} ... \end{vystup}
+\lstnewenvironment{vystup}[1][]{\lstset{style=vystup,#1}}{}
+
+% Zvyrazneni useku uvnitr vypisu (pres escapeinside, viz vyse).
+\newcommand{\zvyrazni}[1]{\colorbox{SPSRed!15}{#1}}
+
+\mode<all>
+\makeatother

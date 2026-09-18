@@ -1,0 +1,49 @@
+// Banka otázek k tématu [NN – NÁZEV] ve formátu GIFT.
+// Import: Kurz -> Banka otázek -> Import -> formát "GIFT format".
+// Kategorie se nastaví buď při importu, nebo řádkem níže:
+$CATEGORY: Programovani 3/[NN] [nazev tematu]
+
+// --- výběr z možností (jedna správná) -------------------------------------
+::[NN]-01 [krátký popis]::
+[Text otázky?] {
+  =[správná odpověď]
+  ~[špatná odpověď 1]#[vysvětlení, proč je špatně]
+  ~[špatná odpověď 2]#[vysvětlení]
+  ~[špatná odpověď 3]#[vysvětlení]
+}
+
+// --- pravda / nepravda ----------------------------------------------------
+::[NN]-02 [krátký popis]::
+[Tvrzení, které je pravdivé nebo nepravdivé.] {T#[vysvětlení]}
+
+// --- více správných odpovědí (procentní váhy) -----------------------------
+::[NN]-03 [krátký popis]::
+[Které z následujících platí? Vyber všechny správné.] {
+  ~%50%[správná 1]
+  ~%50%[správná 2]
+  ~%-50%[špatná 1]
+  ~%-50%[špatná 2]
+}
+
+// --- krátká odpověď (přesný text) -----------------------------------------
+::[NN]-04 [krátký popis]::
+[Jakou funkcí se nastaví pin jako výstup?] {
+  =[pinMode]
+  =[pinMode()]
+}
+
+// --- číselná odpověď s tolerancí ------------------------------------------
+::[NN]-05 [krátký popis]::
+[Kolik hodnot umí rozlišit 10bitový A/D převodník?] {#1024:0}
+
+// --- přiřazování ----------------------------------------------------------
+::[NN]-06 [krátký popis]::
+[Přiřaď funkci k tomu, co dělá.] {
+  =[digitalWrite()] -> [nastaví úroveň na výstupním pinu]
+  =[digitalRead()] -> [přečte úroveň na vstupním pinu]
+  =[analogWrite()] -> [nastaví střídu PWM]
+}
+
+// --- doplňování do textu --------------------------------------------------
+::[NN]-07 [krátký popis]::
+[Funkce {=millis() ~delay()} vrací čas od zapnutí desky, aniž by zastavila program.]

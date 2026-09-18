@@ -1,1 +1,31 @@
 *.bak
+
+# LaTeX – pomocné soubory
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.xdv
+*.run.xml
+
+# operační systém / editory
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+
+# Mezivysledek prekladu: build_prezentace.ps1 hotove PDF prejmenuje na
+# PRG-<tema>.pdf, ktere se commituje. Nepojmenovany 'prezentace.pdf' zbyva
+# jen po rucnim prekladu (latexmk) a do gitu nepatri.
+temata/**/prezentace/prezentace.pdf
+
+# Zalohy moodle kurzu (velke binarni soubory) - drzet mimo git
+*.mbz

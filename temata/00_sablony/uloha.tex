@@ -1,0 +1,125 @@
+% Zadání úlohy k vytištění.
+% Překlad: latexmk -xelatex uloha_NN_nazev.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{czech}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+
+\definecolor{skolaModra}{RGB}{0,84,140}
+\definecolor{kodPozadi}{RGB}{247,247,245}
+\definecolor{kodKomentar}{RGB}{95,120,95}
+
+\lstset{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{skolaModra}\bfseries,
+  commentstyle=\color{kodKomentar}\itshape,
+  backgroundcolor=\color{kodPozadi},
+  frame=single,
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false,
+  morekeywords={setup,loop,pinMode,digitalWrite,digitalRead,analogRead,analogWrite,
+                delay,millis,Serial,HIGH,LOW,INPUT,OUTPUT,INPUT_PULLUP,uint8_t,uint16_t}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small Programování, 3.\,ročník}
+\rhead{\small Úloha «NN»}
+\cfoot{\small\thepage}
+
+\newcommand{\ulohaNazev}{«NÁZEV ÚLOHY»}
+\newcommand{\ulohaCislo}{«NN»}
+
+\begin{document}
+
+\noindent
+{\Large\bfseries\color{skolaModra} Úloha \ulohaCislo{} -- \ulohaNazev}\\[2pt]
+{\small Téma: «NN -- název bloku» \quad|\quad Obtížnost: «základní» \quad|\quad Čas: «30 min»}
+
+\vspace{4mm}
+\hrule
+\vspace{4mm}
+
+\noindent Jméno: \hrulefill{} \quad Datum: \rule{3cm}{0.4pt}
+
+\section*{Zadání}
+
+«Popis úlohy z pohledu chování zařízení.»
+
+\section*{Co má být splněno}
+
+\begin{itemize}[label=$\square$]
+  \item «požadavek 1»
+  \item «požadavek 2»
+  \item Hlavičkový komentář a komentáře u klíčových řádků.
+\end{itemize}
+
+\section*{Zapojení}
+
+% \begin{center}
+%   \includegraphics[width=0.7\textwidth]{../obrazky/uloha_NN_zapojeni.png}
+% \end{center}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Součástka & Pin Arduina & Poznámka \\
+\midrule
+«LED» & «D9» & «+ rezistor 220\,$\Omega$ na GND» \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Kostra kódu}
+
+\begin{lstlisting}
+// Uloha NN - «nazev»
+// Autor:
+// Datum:
+
+const uint8_t PIN_LED = 9;
+
+void setup() {
+  // TODO
+}
+
+void loop() {
+  // TODO
+}
+\end{lstlisting}
+
+\section*{Hodnocení}
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Kritérium & Body \\
+\midrule
+Zařízení funguje podle zadání & 5 \\
+Čitelnost kódu & 3 \\
+Bez blokujícího \texttt{delay()} & 2 \\
+\midrule
+\textbf{Celkem} & \textbf{10} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Rozšíření pro rychlejší}
+
+«Nepovinné zadání navíc.»
+
+\vfill
+\noindent{\small Odevzdání: Moodle, úkol \textbf{«název»}, termín \textbf{«datum»}.}
+
+\end{document}

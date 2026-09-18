@@ -1,0 +1,76 @@
+% ---------------------------------------------------------------------------
+% Společná preambule pro prezentace předmětu Programování (3. ročník)
+%
+% Vzhled řeší motiv beamerthemeSPSProsek.sty ve stejné složce (převzatý
+% z šablony předmětů ZPG/SNT na FS ČVUT a přeznačkovaný na SPŠ na Proseku).
+% Tady se jen načte a doplní se metadata a makra předmětu.
+%
+% Překlad: XeLaTeX (kvůli fontspec a českým znakům)
+%   latexmk -xelatex prezentace.tex
+% nebo jednoduše  .\nastroje\build_prezentace.ps1
+%
+% Vkládá se z prezentace v temata/<tema>/prezentace/ takto:
+%   \input{../../../spolecne/styl/preambule}
+% ---------------------------------------------------------------------------
+
+\usepackage{iftex}
+
+% --- písma a čeština -------------------------------------------------------
+\ifXeTeX
+  \usepackage{fontspec}
+  \usepackage{polyglossia}
+  \setmainlanguage{czech}
+  \setmainfont{Latin Modern Roman}
+  \setsansfont{Latin Modern Sans}
+  \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
+\else
+  % Záložní varianta, kdyby někdo přeložil pdfLaTeXem.
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+  \usepackage[czech]{babel}
+\fi
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+% --- motiv SPŠ na Proseku --------------------------------------------------
+% Cesta ke složce se stylem a logy. Počítá s tím, že prezentace leží
+% v temata/<tema>/prezentace/; zkusí se ale i mělčí zanoření, aby šlo
+% přeložit i rozpracovaný soubor jinde v repozitáři.
+\IfFileExists{../../../spolecne/styl/beamerthemeSPSProsek.sty}
+  {\newcommand{\SPSStylPath}{../../../spolecne/styl}}
+  {\IfFileExists{../../spolecne/styl/beamerthemeSPSProsek.sty}
+    {\newcommand{\SPSStylPath}{../../spolecne/styl}}
+    {\IfFileExists{../spolecne/styl/beamerthemeSPSProsek.sty}
+      {\newcommand{\SPSStylPath}{../spolecne/styl}}
+      {\newcommand{\SPSStylPath}{.}}}}
+\usepackage{\SPSStylPath/beamerthemeSPSProsek}
+
+\setbeamertemplate{footline}[SPSProsek]
+\beamertemplatenavigationsymbolsempty
+
+% --- velikost písma ve výpisech kódu ---------------------------------------
+% Výchozí je \footnotesize. Když se dlouhá ukázka nevejde na slide, zmenši
+% ji buď globálně tady, nebo jen v jedné prezentaci stejným řádkem za
+% \input{...preambule}:
+% \renewcommand{\SPSCodeSize}{\scriptsize}
+
+% --- zkratky pro vkládání kódu ---------------------------------------------
+\newcommand{\kod}[1]{\texttt{\small #1}}          % kód uvnitř věty
+\newcommand{\kodSoubor}[1]{\lstinputlisting{#1}}  % celá skica ze souboru
+\newcommand{\kodSouborRadky}[3]{\lstinputlisting[firstline=#2,lastline=#3]{#1}}
+
+% --- upozornění na slidu ---------------------------------------------------
+\newcommand{\pozor}[1]{\textcolor{akcent}{\textbf{#1}}}
+
+% --- metadata předmětu -----------------------------------------------------
+\author{Jaroslav Bušek}
+\institute{Střední průmyslová škola na Proseku}
+% \date{} zůstává prázdné záměrně -- datum a čas posledního překladu se
+% zobrazuje automaticky v patě každého slidu (\SPSVersionStamp), takže je
+% při promítání hned vidět, jak stará je verze PDF.
+\date{}

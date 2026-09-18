@@ -1,0 +1,170 @@
+% ---------------------------------------------------------------------------
+% Prezentace k tématu «NN – NÁZEV TÉMATU»
+% Překlad:  latexmk -xelatex prezentace.tex   (nebo .\nastroje\build_prezentace.ps1)
+% Handout (bez postupného odkrývání, na tisk): .\nastroje\build_prezentace.ps1 -Handout
+%
+% Vzhled (logo, barvy, patička, sazba kódu) řeší společná preambule
+% a motiv spolecne/styl/beamerthemeSPSProsek.sty -- tady se jen píše obsah.
+% ---------------------------------------------------------------------------
+\documentclass[12pt,aspectratio=169]{beamer}
+
+\input{../../../spolecne/styl/preambule}
+
+% Když se dlouhé výpisy kódu nevejdou na slide, zmenši písmo kódu:
+% \renewcommand{\SPSCodeSize}{\scriptsize}
+
+\title{«NÁZEV TÉMATU»}
+\subtitle{Programování -- 3.\,ročník (Mechatronika), téma «NN»}
+
+\begin{document}
+
+\maketitle
+
+% ---------------------------------------------------------------------------
+% keyframe = slide s červeným pruhem vlevo; používá se pro opakující se typy
+% slidů (cíle na začátku, shrnutí na konci), aby šly v PDF hned poznat.
+\begin{keyframe}{Co dnes zvládneme}
+  \begin{itemize}
+    \item «cíl 1 -- formulovaný jako „dokážu …“»
+    \item «cíl 2»
+    \item «cíl 3»
+  \end{itemize}
+  \vfill
+  \pozor{Na konci hodiny:} «konkrétní výstup -- funkční program, který …»
+\end{keyframe}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Kde se to používá}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \item «praktický příklad 1»
+        \item «praktický příklad 2»
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      % \includegraphics[width=\textwidth,keepaspectratio]{../obrazky/motivace.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\section{Teorie}
+
+\begin{frame}{«Klíčový pojem»}
+  \begin{block}{Definice}
+    «Stručně, jednou větou.»
+  \end{block}
+  \begin{itemize}
+    \item «důsledek / vlastnost 1»
+    \item «důsledek / vlastnost 2»
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Zapojení}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      % \includegraphics[width=\textwidth,keepaspectratio]{../obrazky/zapojeni.png}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \small
+      \begin{tabular}{ll}
+        \toprule
+        Součástka & Pin \\
+        \midrule
+        «LED» & «D9» \\
+        \bottomrule
+      \end{tabular}
+      \vspace{3mm}
+
+      \pozor{Pozor:} «typická chyba v zapojení»
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\section{Kód}
+
+% Slide s výpisem kódu MUSÍ být [fragile], jinak lstlisting nefunguje.
+\begin{frame}[fragile]{Minimální funkční program}
+\begin{lstlisting}
+const uint8_t PIN_LED = 9;
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(PIN_LED, HIGH);
+  delay(500);
+  digitalWrite(PIN_LED, LOW);
+  delay(500);
+}
+\end{lstlisting}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Krátká ukázka a výstup na sériové lince}
+  Pro drobné útržky se hodí styl bez číslování řádků; úsek, o kterém se
+  zrovna mluví, jde zvýraznit makrem \kod{\textbackslash zvyrazni}:
+\begin{lstlisting}[style=arduino_bez_cisel]
+for (int i = 0; i < 3; i++) {
+  Serial.println((*@\zvyrazni{i}@*));
+}
+\end{lstlisting}
+
+  Co se objeví v sériovém monitoru:
+\begin{vystup}
+0
+1
+2
+\end{vystup}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[fragile]{Ukázka přímo ze skici}
+  % Vloží kód rovnou ze souboru ve složce kod/ -- prezentace se tak nikdy
+  % nerozejde s tím, co mají žáci na svém Arduinu.
+  % \kodSouborRadky{../kod/nazev_skici/nazev_skici.ino}{1}{20}
+  \small
+  Kód se vkládá makrem \kod{\textbackslash kodSouborRadky\{cesta\}\{od\}\{do\}}
+  (celý soubor pak \kod{\textbackslash kodSoubor\{cesta\}}) přímo ze složky
+  \kod{kod/} -- prezentace tak nikdy neukazuje jinou verzi, než jakou žáci
+  dostanou.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Častá chyba}
+  \begin{alertblock}{«Co žáci typicky udělají špatně»}
+    «Popis chyby a proč se chová, jak se chová.»
+  \end{alertblock}
+  \begin{exampleblock}{Správně}
+    «Jak to má být.»
+  \end{exampleblock}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\section{Úloha}
+
+\begin{frame}{Zadání na dnešní hodinu}
+  \begin{enumerate}
+    \item «krok 1»
+    \item «krok 2»
+    \item «krok 3»
+  \end{enumerate}
+  \vfill
+  \small Podrobné zadání: Moodle, úkol \textbf{«název»}. Odevzdání do \textbf{«datum»}.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{keyframe}{Shrnutí}
+  \begin{itemize}
+    \item «co si odnést 1»
+    \item «co si odnést 2»
+  \end{itemize}
+  \vfill
+  \pozor{Příště:} «téma další hodiny»
+\end{keyframe}
+
+\end{document}
